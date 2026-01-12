@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>3D Seismic & Horizon Viewer</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+    }
+
+    /* Control panel styling */
+    .control-panel {
+      position: absolute;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 12px 16px;
+      border-radius: 8px;
+      z-index: 10;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .control-panel label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .control-panel input[type="range"] {
+      width: 150px;
+    }
+
+    .control-panel .value-label {
+      min-width: 40px;
+      text-align: right;
+      font-weight: bold;
+    }
+
+    #inlineControl { top: 10px; }
+    #crosslineControl { top: 70px; }
+    #toggleControl { top: 130px; }
+
+    #toggleHorizonBtn {
+      padding: 8px 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #4a90d9;
+      color: white;
+      font-size: 14px;
+    }
+
+    #toggleHorizonBtn:hover {
+      background: #357abd;
+    }
+  </style>
+</head>
+<body>
+
+<!-- UI Controls -->
+<div id="inlineControl" class="control-panel">
+  <label>
+    Inline:
+    <input type="range" id="inlineSlider" min="0" max="1091" value="0" />
+    <span id="label_inline" class="value-label">0</span>
+  </label>
+</div>
+
+<div id="crosslineControl" class="control-panel">
+  <label>
+    Crossline:
+    <input type="range" id="crosslineSlider" min="0" max="548" value="0" />
+    <span id="label_crossline" class="value-label">0</span>
+  </label>
+</div>
+
+<div id="toggleControl" class="control-panel">
+  <button id="toggleHorizonBtn">Hide Horizon</button>
+</div>
+
+<!-- Three.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
+
+<!--
+  Main Application Entry Point
+
+  Using ES6 modules for clean code organization.
+  All logic is now in the /js/ folder structure.
+-->
+<script type="module" src="/js/App.js"></script>
+
+</body>
+</html>
