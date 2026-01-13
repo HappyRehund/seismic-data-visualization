@@ -25,7 +25,14 @@ export class SceneManager {
             radius: CameraConfig.initialRadius
         };
 
+        // Raycaster for mouse interaction
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+        this.tooltip = null;
+        this.hoveredWell = null; // Track currently hovered well for highlighting
+
         this._init();
+        this._setupMouseInteraction();
     }
 
     /**
@@ -193,5 +200,99 @@ export class SceneManager {
             this.renderer.render(this.scene, this.camera);
         };
         animate();
+    }
+
+    /**
+     * Setup mouse interaction for tooltips
+     * @private
+     */
+    _setupMouseInteraction() {
+        this.tooltip = document.getElementById('wellTooltip');
+        
+        if (!this.tooltip) {
+            console.warn('Well tooltip element not found');
+            return;
+        }
+        
+        // Track mouse movement for tooltip
+        this.renderer.domElement.addEventListener('mousemove', (event) => {
+            // Don't show tooltip while dragging camera
+            if (this.orbitState.isDragging) {
+                this._hideTooltip();
+                return;
+            }
+            this._checkWellHover(event);
+        });
+    }
+
+    /**
+     * Check if mouse is hovering over a well
+     * @private
+     */
+    _checkWellHover(event) {
+        // Calculate mouse position in normalized device coordinates
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        // Update raycaster
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+
+        // Check for intersections with all objects
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+        
+        let wellFound = false;
+        let newHoveredWell = null;
+        
+        for (let intersect of intersects) {
+            // Check if the intersected object is a well
+            if (intersect.object.userData && intersect.object.userData.type === 'well') {
+                this._showTooltip(intersect.object.userData.name, event.clientX, event.clientY);
+                newHoveredWell = intersect.object;
+                wellFound = true;
+                break;
+            }
+        }
+
+        // Update highlighting
+        if (newHoveredWell !== this.hoveredWell) {
+            // Unhighlight previous well
+            if (this.hoveredWell && this.hoveredWell.userData.wellInstance) {
+                this.hoveredWell.userData.wellInstance.unhighlight();
+            }
+            
+            // Highlight new well
+            if (newHoveredWell && newHoveredWell.userData.wellInstance) {
+                newHoveredWell.userData.wellInstance.highlight();
+            }
+            
+            this.hoveredWell = newHoveredWell;
+        }
+
+        if (!wellFound) {
+            this._hideTooltip();
+        }
+    }
+
+    /**
+     * Show tooltip at mouse position
+     * @private
+     */
+    _showTooltip(wellName, x, y) {
+        if (!this.tooltip) return;
+        
+        this.tooltip.textContent = `Well ${wellName}`;
+        this.tooltip.style.display = 'block';
+        this.tooltip.style.left = `${x + 15}px`;
+        this.tooltip.style.top = `${y + 15}px`;
+    }
+
+    /**
+     * Hide tooltip
+     * @private
+     */
+    _hideTooltip() {
+        if (!this.tooltip) return;
+        this.tooltip.style.display = 'none';
     }
 }

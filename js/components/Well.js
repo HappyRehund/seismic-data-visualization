@@ -27,7 +27,8 @@ export class Well {
         this.sceneManager = sceneManager;
         this.name = name;
         this.mesh = null;
-        this.label = null;
+        this.originalColor = color;
+        this.isHighlighted = false;
 
         this._create(inline, crossline, timeStart, timeEnd, radius, color);
     }
@@ -60,12 +61,15 @@ export class Well {
             -centerY / SeismicConfig.timeSize * SeismicConfig.imageHeight + SeismicConfig.timeSize,
             z
         );
+        
+        // Add user data for identification and highlighting
+        this.mesh.userData = {
+            type: 'well',
+            name: this.name,
+            wellInstance: this // Store reference to this Well instance
+        };
+        
         this.sceneManager.add(this.mesh);
-
-        // Create label
-        this.label = this._createLabel();
-        this.label.position.set(x, yTop + 100, z);
-        this.sceneManager.add(this.label);
     }
 
     /**
@@ -77,47 +81,33 @@ export class Well {
     }
 
     /**
-     * Create text label sprite
-     * @private
-     */
-    _createLabel() {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        const fontSize = 48;
-        ctx.font = `${fontSize}px Arial`;
-
-        const textWidth = ctx.measureText(this.name).width;
-        canvas.width = textWidth + 20;
-        canvas.height = fontSize + 20;
-
-        // Re-render after resize
-        ctx.font = `${fontSize}px Arial`;
-        ctx.fillStyle = 'white';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(this.name, canvas.width / 2, canvas.height / 2);
-
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.needsUpdate = true;
-
-        const material = new THREE.SpriteMaterial({
-            map: texture,
-            transparent: true
-        });
-
-        const sprite = new THREE.Sprite(material);
-        sprite.scale.set(150, 50, 1);
-
-        return sprite;
-    }
-
-    /**
      * Toggle visibility
      */
     setVisible(visible) {
         if (this.mesh) this.mesh.visible = visible;
-        if (this.label) this.label.visible = visible;
+    }
+
+    /**
+     * Highlight well (darken color on hover)
+     */
+    highlight() {
+        if (this.mesh && !this.isHighlighted) {
+            const color = new THREE.Color(this.originalColor);
+            // Darken the color by 40%
+            color.multiplyScalar(0.6);
+            this.mesh.material.color.copy(color);
+            this.isHighlighted = true;
+        }
+    }
+
+    /**
+     * Remove highlight (restore original color)
+     */
+    unhighlight() {
+        if (this.mesh && this.isHighlighted) {
+            this.mesh.material.color.set(this.originalColor);
+            this.isHighlighted = false;
+        }
     }
 
     /**
@@ -128,11 +118,6 @@ export class Well {
             this.sceneManager.remove(this.mesh);
             this.mesh.geometry.dispose();
             this.mesh.material.dispose();
-        }
-        if (this.label) {
-            this.sceneManager.remove(this.label);
-            this.label.material.map.dispose();
-            this.label.material.dispose();
         }
     }
 }
@@ -168,18 +153,36 @@ export class WellLoader {
             const crossIdx = header.indexOf('Crossline_n');
             const nameIdx = header.indexOf('Well_name');
 
+            // Track coordinates to detect duplicates
+            const coordinateMap = new Map(); // key: "inline,crossline" -> count
+
             for (let i = 1; i < rows.length; i++) {
                 const cols = rows[i].split(delimiter);
 
-                const inline = parseFloat(cols[inlineIdx]);
-                const crossline = parseFloat(cols[crossIdx]);
+                let inline = parseFloat(cols[inlineIdx]);
+                let crossline = parseFloat(cols[crossIdx]);
                 const name = cols[nameIdx]?.trim();
 
                 if (!isNaN(inline) && !isNaN(crossline) && name) {
-                    // Skip duplicates (use first occurrence)
+                    // Skip duplicate names
                     if (this.wellsMap.has(name)) {
-                        console.log(`Skipping duplicate well: ${name}`);
+                        console.log(`Skipping duplicate well name: ${name}`);
                         continue;
+                    }
+
+                    // Check for duplicate coordinates and apply offset
+                    const coordKey = `${inline},${crossline}`;
+                    if (coordinateMap.has(coordKey)) {
+                        const count = coordinateMap.get(coordKey);
+                        // Offset subsequent wells slightly in a circular pattern
+                        const angle = (count * Math.PI * 2) / 4; // Divide circle into 4 parts
+                        const offset = 0.5; // Small offset
+                        inline += offset * Math.cos(angle);
+                        crossline += offset * Math.sin(angle);
+                        coordinateMap.set(coordKey, count + 1);
+                        console.log(`Well ${name} has duplicate coordinates with another well, applying offset`);
+                    } else {
+                        coordinateMap.set(coordKey, 1);
                     }
 
                     const well = new Well(

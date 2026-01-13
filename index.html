@@ -70,10 +70,11 @@
       align-items: center;
       margin-bottom: 10px;
       padding-bottom: 8px;
+      gap: 10px;
       border-bottom: 1px solid #ddd;
     }
 
-    .well-panel-header span {
+    .well-panel-header div {
       font-weight: bold;
     }
 
@@ -101,6 +102,23 @@
     .well-item label {
       cursor: pointer;
       user-select: none;
+    }
+
+    /* Well tooltip */
+    #wellTooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
   </style>
 </head>
@@ -133,7 +151,7 @@
 
 <div id="wellControl" class="control-panel">
   <div class="well-panel-header">
-    <span>Wells</span>
+    <div>Wells</div>
     <button id="toggleAllWellsBtn">Hide All</button>
   </div>
   <div id="wellList" class="well-list">
@@ -141,6 +159,9 @@
     <div style="color: #888; font-style: italic;">Loading wells...</div>
   </div>
 </div>
+
+<!-- Well Tooltip -->
+<div id="wellTooltip"></div>
 
 <!-- Three.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
