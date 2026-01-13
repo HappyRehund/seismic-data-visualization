@@ -43,8 +43,10 @@
     #inlineControl { top: 10px; }
     #crosslineControl { top: 70px; }
     #toggleControl { top: 130px; }
+    #toggleFaultControl { top: 190px; }
 
-    #toggleHorizonBtn {
+    #toggleHorizonBtn,
+    #toggleFaultBtn {
       padding: 8px 16px;
       cursor: pointer;
       border: none;
@@ -54,7 +56,8 @@
       font-size: 14px;
     }
 
-    #toggleHorizonBtn:hover {
+    #toggleHorizonBtn:hover,
+    #toggleFaultBtn:hover {
       background: #357abd;
     }
   </style>
@@ -80,6 +83,10 @@
 
 <div id="toggleControl" class="control-panel">
   <button id="toggleHorizonBtn">Hide Horizon</button>
+</div>
+
+<div id="toggleFaultControl" class="control-panel">
+  <button id="toggleFaultBtn">Hide Fault</button>
 </div>
 
 <!-- Three.js Library -->

@@ -163,6 +163,19 @@ export class UIManager {
     }
 
     /**
+     * Create fault toggle button
+     * @param {FaultLoader} faultLoader - The fault loader
+     */
+    createFaultToggle(faultLoader) {
+        this.controls.faultToggle = new ToggleButton(
+            'toggleFaultBtn',
+            'Show Fault',
+            'Hide Fault',
+            (visible) => faultLoader.setAllVisible(visible)
+        );
+    }
+
+    /**
      * Get a control by name
      */
     getControl(name) {

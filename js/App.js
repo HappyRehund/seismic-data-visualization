@@ -113,6 +113,9 @@ class SeismicViewerApp {
 
         // Connect toggle button to horizons
         this.uiManager.createHorizonToggle(this.horizonManager);
+        
+        // Connect toggle button to faults
+        this.uiManager.createFaultToggle(this.faultLoader);
     }
 
     /**
@@ -121,7 +124,6 @@ class SeismicViewerApp {
      */
     async _loadData() {
         // Load horizons
-        // Add your horizon CSV files here
         try {
             await this.horizonManager.addHorizon('/horizon.csv', 'top');
             await this.horizonManager.addHorizon('/horizon.csv', 'bottom');

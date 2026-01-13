@@ -33,6 +33,12 @@ export class FaultSegment {
         this.sceneManager.add(this.line);
     }
 
+    setVisible(visible) {
+        if (this.line) {
+            this.line.visible = visible;
+        }
+    }
+
     dispose() {
         if (this.line) {
             this.sceneManager.remove(this.line);
@@ -84,6 +90,12 @@ export class FaultPanel {
 
         this.mesh = new THREE.Mesh(geometry, material);
         this.sceneManager.add(this.mesh);
+    }
+
+    setVisible(visible) {
+        if (this.mesh) {
+            this.mesh.visible = visible;
+        }
     }
 
     dispose() {
@@ -234,6 +246,23 @@ export class FaultLoader {
         }
         
         console.log(`All faults loaded: ${this.faults.length} objects created`);
+    }
+
+    /**
+     * Set visibility for all faults
+     * @param {boolean} visible - Visibility state
+     */
+    setAllVisible(visible) {
+        this.faults.forEach(f => f.setVisible(visible));
+    }
+
+    /**
+     * Toggle all faults visibility
+     */
+    toggleAll() {
+        const newState = this.faults.length > 0 ? !this.faults[0].line?.visible ?? !this.faults[0].mesh?.visible : true;
+        this.setAllVisible(newState);
+        return newState;
     }
 
     /**
