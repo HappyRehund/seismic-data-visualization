@@ -214,6 +214,29 @@ export class FaultLoader {
     }
 
     /**
+     * Load all fault files from a directory
+     * @param {string[]} faultFiles - Array of fault file paths
+     * @param {boolean} as3D - Whether to load as 3D surfaces (true) or 2D lines (false)
+     */
+    async loadAllFaults(faultFiles, as3D = true) {
+        console.log(`Loading ${faultFiles.length} fault files...`);
+        
+        for (const file of faultFiles) {
+            try {
+                if (as3D) {
+                    await this.loadFaultSurfaces(file);
+                } else {
+                    await this.loadFaultLines(file);
+                }
+            } catch (e) {
+                console.warn(`Failed to load fault: ${file}`, e);
+            }
+        }
+        
+        console.log(`All faults loaded: ${this.faults.length} objects created`);
+    }
+
+    /**
      * Remove all faults from scene
      */
     dispose() {

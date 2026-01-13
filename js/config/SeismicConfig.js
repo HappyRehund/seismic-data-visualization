@@ -77,7 +77,7 @@ export const CameraConfig = {
     far: 10000,
 
     // Initial camera position (spherical coordinates)
-    initialRadius: 4000,
+    initialRadius: 6000,
     initialTheta: Math.PI / 4,   // Horizontal angle
     initialPhi: Math.PI / 3,     // Vertical angle
 
