@@ -143,7 +143,9 @@ export class Well {
 export class WellLoader {
     constructor(sceneManager) {
         this.sceneManager = sceneManager;
-        this.wells = [];
+        this.wells = [];           // Array of Well objects
+        this.wellsMap = new Map(); // Map of name -> Well for quick lookup
+        this.onWellsLoaded = null; // Callback when wells are loaded
     }
 
     /**
@@ -171,9 +173,15 @@ export class WellLoader {
 
                 const inline = parseFloat(cols[inlineIdx]);
                 const crossline = parseFloat(cols[crossIdx]);
-                const name = cols[nameIdx];
+                const name = cols[nameIdx]?.trim();
 
-                if (!isNaN(inline) && !isNaN(crossline)) {
+                if (!isNaN(inline) && !isNaN(crossline) && name) {
+                    // Skip duplicates (use first occurrence)
+                    if (this.wellsMap.has(name)) {
+                        console.log(`Skipping duplicate well: ${name}`);
+                        continue;
+                    }
+
                     const well = new Well(
                         this.sceneManager,
                         name,
@@ -183,20 +191,90 @@ export class WellLoader {
                         defaultTimeEnd  // timeEnd
                     );
                     this.wells.push(well);
+                    this.wellsMap.set(name, well);
                 }
             }
 
             console.log(`Wells loaded: ${this.wells.length}`);
+
+            // Trigger callback if set
+            if (this.onWellsLoaded) {
+                this.onWellsLoaded(this.getWellNames());
+            }
         } catch (error) {
             console.error('Failed to load wells:', error);
         }
     }
 
     /**
+     * Get all well names
+     * @returns {string[]} Array of well names
+     */
+    getWellNames() {
+        return this.wells.map(w => w.name);
+    }
+
+    /**
+     * Get a well by name
+     * @param {string} name - Well name
+     * @returns {Well|undefined}
+     */
+    getWell(name) {
+        return this.wellsMap.get(name);
+    }
+
+    /**
+     * Set visibility for a specific well
+     * @param {string} name - Well name
+     * @param {boolean} visible - Visibility state
+     */
+    setWellVisible(name, visible) {
+        const well = this.wellsMap.get(name);
+        if (well) {
+            well.setVisible(visible);
+        }
+    }
+
+    /**
+     * Set visibility for multiple wells
+     * @param {string[]} names - Array of well names
+     * @param {boolean} visible - Visibility state
+     */
+    setWellsVisible(names, visible) {
+        names.forEach(name => this.setWellVisible(name, visible));
+    }
+
+    /**
      * Set visibility for all wells
+     * @param {boolean} visible - Visibility state
      */
     setAllVisible(visible) {
         this.wells.forEach(w => w.setVisible(visible));
+    }
+
+    /**
+     * Toggle visibility for a specific well
+     * @param {string} name - Well name
+     * @returns {boolean} New visibility state
+     */
+    toggleWell(name) {
+        const well = this.wellsMap.get(name);
+        if (well) {
+            const newState = !well.mesh?.visible;
+            well.setVisible(newState);
+            return newState;
+        }
+        return false;
+    }
+
+    /**
+     * Check if a well is visible
+     * @param {string} name - Well name
+     * @returns {boolean}
+     */
+    isWellVisible(name) {
+        const well = this.wellsMap.get(name);
+        return well?.mesh?.visible ?? false;
     }
 
     /**
@@ -205,5 +283,6 @@ export class WellLoader {
     dispose() {
         this.wells.forEach(w => w.dispose());
         this.wells = [];
+        this.wellsMap.clear();
     }
 }

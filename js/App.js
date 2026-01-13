@@ -116,6 +116,9 @@ class SeismicViewerApp {
         
         // Connect toggle button to faults
         this.uiManager.createFaultToggle(this.faultLoader);
+        
+        // Connect well panel to well loader
+        this.uiManager.createWellPanel(this.wellLoader);
     }
 
     /**

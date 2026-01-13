@@ -44,9 +44,11 @@
     #crosslineControl { top: 70px; }
     #toggleControl { top: 130px; }
     #toggleFaultControl { top: 190px; }
+    #wellControl { top: 250px; max-height: 400px; overflow-y: auto; }
 
     #toggleHorizonBtn,
-    #toggleFaultBtn {
+    #toggleFaultBtn,
+    #toggleAllWellsBtn {
       padding: 8px 16px;
       cursor: pointer;
       border: none;
@@ -57,8 +59,48 @@
     }
 
     #toggleHorizonBtn:hover,
-    #toggleFaultBtn:hover {
+    #toggleFaultBtn:hover,
+    #toggleAllWellsBtn:hover {
       background: #357abd;
+    }
+
+    .well-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .well-panel-header span {
+      font-weight: bold;
+    }
+
+    .well-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .well-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+
+    .well-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .well-item label {
+      cursor: pointer;
+      user-select: none;
     }
   </style>
 </head>
@@ -87,6 +129,17 @@
 
 <div id="toggleFaultControl" class="control-panel">
   <button id="toggleFaultBtn">Hide Fault</button>
+</div>
+
+<div id="wellControl" class="control-panel">
+  <div class="well-panel-header">
+    <span>Wells</span>
+    <button id="toggleAllWellsBtn">Hide All</button>
+  </div>
+  <div id="wellList" class="well-list">
+    <!-- Well checkboxes will be dynamically added here -->
+    <div style="color: #888; font-style: italic;">Loading wells...</div>
+  </div>
 </div>
 
 <!-- Three.js Library -->
