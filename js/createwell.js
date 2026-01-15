@@ -2,7 +2,7 @@
 // untuk well
 //================================
 
-// === UPDATE 4: PERBAIKAN FUNGSI WELL PIPE ===
+// === UPDATE 4: FUNGSI WELL PIPE ===
 function createWellPipe(wellname, inline, crossline, timeStart, timeEnd, radiuswell = 20, color = 0xFFFF00) {
 
   // 1. Koordinat Horizontal (X & Z)

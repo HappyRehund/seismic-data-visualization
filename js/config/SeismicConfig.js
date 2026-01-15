@@ -102,7 +102,7 @@ export const StyleConfig = {
     defaultWellColor: 0xffff00,
 
     // Component sizes
-    wellRadius: 2,
+    wellRadius: 10,
     horizonPointSize: 2,
 
     // Opacity
