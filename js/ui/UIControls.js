@@ -132,10 +132,21 @@ export class WellTogglePanel {
             const wellItem = document.createElement('div');
             wellItem.className = 'well-item';
 
+            // Get well to check for duplicates
+            const well = this.wellLoader.getWell(name);
+            const hasDuplicates = well && well.duplicateNames && well.duplicateNames.length > 0;
+
             // Well name label
             const label = document.createElement('span');
             label.className = 'well-name';
-            label.textContent = name;
+            
+            if (hasDuplicates) {
+                label.textContent = `${name} (+${well.duplicateNames.length})`;
+                label.title = `Includes: ${well.duplicateNames.join(', ')}`;
+                label.style.cursor = 'help';
+            } else {
+                label.textContent = name;
+            }
 
             // Log type selector dropdown
             const logSelect = document.createElement('select');

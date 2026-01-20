@@ -37,10 +37,14 @@ export class Well {
         const geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
         const material = new THREE.MeshPhongMaterial({
             color,
-            shininess: 100
+            shininess: 100,
+            transparent: true,
+            opacity: 0.4,           // Make well semi-transparent so logs are visible
+            depthWrite: false       // Prevent z-fighting with log inside
         });
 
         this.mesh = new THREE.Mesh(geometry, material);
+        this.mesh.renderOrder = 0;  // Render well first, then log on top
         this.mesh.position.set(
             x,
             -centerY / SeismicConfig.timeSize * SeismicConfig.imageHeight + SeismicConfig.timeSize,
@@ -172,47 +176,73 @@ export class WellLoader {
             const nameIdx = header.indexOf('Well_name');
 
             // Track coordinates to detect duplicates
-            const coordinateMap = new Map(); // key: "inline,crossline" -> count
-
+            // key: "inline,crossline" -> { primaryName, duplicates: [] }
+            const coordinateMap = new Map();
+            
+            // First pass: identify all wells and group by coordinates
+            const wellDataList = [];
             for (let i = 1; i < rows.length; i++) {
                 const cols = rows[i].split(delimiter);
 
-                let inline = parseFloat(cols[inlineIdx]);
-                let crossline = parseFloat(cols[crossIdx]);
+                const inline = parseFloat(cols[inlineIdx]);
+                const crossline = parseFloat(cols[crossIdx]);
                 const name = cols[nameIdx]?.trim();
 
                 if (!isNaN(inline) && !isNaN(crossline) && name) {
-                    // Skip duplicate names
-                    if (this.wellsMap.has(name)) {
-                        console.log(`Skipping duplicate well name: ${name}`);
-                        continue;
-                    }
+                    wellDataList.push({ inline, crossline, name });
+                }
+            }
 
-                    // Check for duplicate coordinates and apply offset
-                    const coordKey = `${inline},${crossline}`;
-                    if (coordinateMap.has(coordKey)) {
-                        const count = coordinateMap.get(coordKey);
-                        // Offset subsequent wells slightly in a circular pattern
-                        const angle = (count * Math.PI * 2) / 4; // Divide circle into 4 parts
-                        const offset = 0.5; // Small offset
-                        inline += offset * Math.cos(angle);
-                        crossline += offset * Math.sin(angle);
-                        coordinateMap.set(coordKey, count + 1);
-                        console.log(`Well ${name} has duplicate coordinates with another well, applying offset`);
-                    } else {
-                        coordinateMap.set(coordKey, 1);
-                    }
+            // Group wells by coordinates
+            for (const wellData of wellDataList) {
+                const coordKey = `${wellData.inline},${wellData.crossline}`;
+                
+                if (!coordinateMap.has(coordKey)) {
+                    coordinateMap.set(coordKey, {
+                        primary: wellData,
+                        duplicates: []
+                    });
+                } else {
+                    coordinateMap.get(coordKey).duplicates.push(wellData.name);
+                }
+            }
 
-                    const well = new Well(
-                        this.sceneManager,
-                        name,
-                        inline,
-                        crossline,
-                        0,              // timeStart
-                        defaultTimeEnd  // timeEnd
-                    );
-                    this.wells.push(well);
-                    this.wellsMap.set(name, well);
+            // Second pass: create wells (only primary wells, with duplicate info)
+            for (const [coordKey, coordData] of coordinateMap) {
+                const { primary, duplicates } = coordData;
+                
+                // Skip if we already have this well name
+                if (this.wellsMap.has(primary.name)) {
+                    console.log(`Skipping duplicate well name: ${primary.name}`);
+                    continue;
+                }
+
+                // Create display name with duplicate info
+                let displayName = primary.name;
+                if (duplicates.length > 0) {
+                    console.log(`Well ${primary.name} has duplicates at same location: ${duplicates.join(', ')}`);
+                }
+
+                const well = new Well(
+                    this.sceneManager,
+                    primary.name,
+                    primary.inline,
+                    primary.crossline,
+                    0,              // timeStart
+                    defaultTimeEnd  // timeEnd
+                );
+                
+                // Store duplicate names for reference
+                well.duplicateNames = duplicates;
+                
+                this.wells.push(well);
+                this.wellsMap.set(primary.name, well);
+                
+                // Also map duplicate names to the same well for log data matching
+                for (const dupName of duplicates) {
+                    if (!this.wellsMap.has(dupName)) {
+                        this.wellsMap.set(dupName, well);
+                    }
                 }
             }
 
@@ -269,13 +299,39 @@ export class WellLoader {
      * @param {WellLogLoader} wellLogLoader 
      */
     attachLogData(wellLogLoader) {
+        let attachedCount = 0;
+        
         for (const [name, well] of this.wellsMap) {
-            const logData = wellLogLoader.getWellLogData(name);
+            // Try multiple name formats to match well log data
+            const namesToTry = [
+                name,                           // Original: "067"
+                `GNK-${name}`,                  // With prefix: "GNK-067"
+                `GNK-0${name}`,                 // With prefix and leading zero: "GNK-0067"
+                name.replace(/^0+/, ''),        // Without leading zeros: "67"
+                `GNK-${name.replace(/^0+/, '')}`, // GNK without leading zeros: "GNK-67"
+                name.padStart(3, '0'),          // Padded to 3 digits: "067"
+                `GNK-${name.padStart(3, '0')}`, // GNK with padding: "GNK-067"
+            ];
+
+            let logData = null;
+            let matchedName = null;
+
+            for (const tryName of namesToTry) {
+                logData = wellLogLoader.getWellLogData(tryName);
+                if (logData) {
+                    matchedName = tryName;
+                    break;
+                }
+            }
+
             if (logData) {
                 well.setLogData(logData);
-                console.log(`Attached log data to well ${name}`);
+                attachedCount++;
+                console.log(`Attached log data to well ${name} (matched as ${matchedName})`);
             }
         }
+        
+        console.log(`Total wells with log data: ${attachedCount}/${this.wellsMap.size}`);
     }
 
     /**

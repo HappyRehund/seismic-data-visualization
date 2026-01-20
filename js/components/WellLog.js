@@ -20,10 +20,11 @@ export const WellLogConfig = {
     },
 
     // Display settings
-    maxLogWidth: 80,        // Maximum width of log curve from well center
-    tubeRadius: 3,          // Radius of the log curve tube
-    curveSegments: 8,       // Smoothness of tube
-    nullValue: -999.25      // Null/missing data value
+    maxLogWidth: 20,          // Maximum width of log curve from well center (inside well radius of 10)
+    tubeRadius: 1,          // Radius of the log curve tube
+    curveSegments: 6,       // Smoothness of tube
+    nullValue: -999.25,     // Null/missing data value
+    nullOffset: -6          // Offset for null values (left side of well, inside radius)
 };
 
 /**
@@ -67,10 +68,11 @@ export class WellLog {
             color: this.config.color,
             shininess: 60,
             transparent: true,
-            opacity: 0.9
+            opacity: 0.95
         });
 
         this.mesh = new THREE.Mesh(geometry, material);
+        this.mesh.renderOrder = 1;  // Render log after well so it appears on top
         this.mesh.userData = {
             type: 'wellLog',
             wellName: this.well.name,
@@ -88,12 +90,27 @@ export class WellLog {
         const wellX = wellPos.x;
         const wellZ = wellPos.z;
 
-        // Filter out null values and sort by depth
-        const validData = this.logData
-            .filter(d => d.value !== null && d.value !== WellLogConfig.nullValue && !isNaN(d.value))
-            .sort((a, b) => a.depth - b.depth);
+        // Get well's Y range for proper alignment
+        const wellMesh = this.well.mesh;
+        const wellHeight = wellMesh.geometry.parameters.height;
+        const wellCenterY = wellMesh.position.y;
+        const wellTopY = wellCenterY + wellHeight / 2;
+        const wellBottomY = wellCenterY - wellHeight / 2;
 
-        if (validData.length === 0) return points;
+        // Sort data by depth (don't filter out nulls yet)
+        const sortedData = [...this.logData].sort((a, b) => a.depth - b.depth);
+
+        if (sortedData.length === 0) return points;
+
+        // Get depth range from data
+        const validDepths = sortedData.filter(d => !isNaN(d.depth)).map(d => d.depth);
+        if (validDepths.length === 0) return points;
+        
+        const minDepth = Math.min(...validDepths);
+        const maxDepth = Math.max(...validDepths);
+        const depthRange = maxDepth - minDepth;
+
+        if (depthRange === 0) return points;
 
         // Determine min/max for normalization
         let minVal = this.config.min;
@@ -102,31 +119,44 @@ export class WellLog {
         // For log scale (like RT), use logarithmic normalization
         const useLogScale = this.config.logScale || false;
 
-        for (const data of validData) {
-            let normalizedValue;
-            
-            if (useLogScale) {
-                // Logarithmic scale
-                const logMin = Math.log10(Math.max(minVal, 0.001));
-                const logMax = Math.log10(Math.max(maxVal, 0.001));
-                const logVal = Math.log10(Math.max(data.value, 0.001));
-                normalizedValue = (logVal - logMin) / (logMax - logMin);
+        for (const data of sortedData) {
+            if (isNaN(data.depth)) continue;
+
+            let offset;
+            const isNull = data.value === null || 
+                          data.value === WellLogConfig.nullValue || 
+                          isNaN(data.value);
+
+            if (isNull) {
+                // Null values: straight line at left side of well
+                offset = WellLogConfig.nullOffset;
             } else {
-                // Linear scale
-                normalizedValue = (data.value - minVal) / (maxVal - minVal);
+                let normalizedValue;
+                
+                if (useLogScale) {
+                    // Logarithmic scale
+                    const logMin = Math.log10(Math.max(minVal, 0.001));
+                    const logMax = Math.log10(Math.max(maxVal, 0.001));
+                    const logVal = Math.log10(Math.max(data.value, 0.001));
+                    normalizedValue = (logVal - logMin) / (logMax - logMin);
+                } else {
+                    // Linear scale
+                    normalizedValue = (data.value - minVal) / (maxVal - minVal);
+                }
+                
+                // Clamp to 0-1
+                normalizedValue = Math.max(0, Math.min(1, normalizedValue));
+                
+                // Calculate offset from well center (inside well radius)
+                // Map 0-1 to -maxLogWidth to +maxLogWidth
+                offset = (normalizedValue * 2 - 1) * WellLogConfig.maxLogWidth;
             }
             
-            // Clamp to 0-1
-            normalizedValue = Math.max(0, Math.min(1, normalizedValue));
-            
-            // Calculate offset from well center
-            const offset = normalizedValue * WellLogConfig.maxLogWidth;
-            
-            // Calculate Y position from depth
-            const y = this._depthToY(data.depth);
+            // Calculate Y position - map depth to well's Y range
+            const depthNormalized = (data.depth - minDepth) / depthRange;
+            const y = wellTopY - depthNormalized * wellHeight;
             
             // Create point offset from well center
-            // Offset in X direction for visibility
             points.push(new THREE.Vector3(
                 wellX + offset,
                 y,
@@ -137,12 +167,7 @@ export class WellLog {
         return points;
     }
 
-    _depthToY(depth) {
-        // Convert depth (TVDSS) to Y coordinate
-        // Similar to Well._mapTimeToY but for depth
-        const mappedDepth = depth - 200;
-        return -mappedDepth / SeismicConfig.timeSize * SeismicConfig.imageHeight + SeismicConfig.timeSize;
-    }
+    // Removed _depthToY - now using well's actual geometry for Y alignment
 
     setVisible(visible) {
         if (this.mesh) {
@@ -216,6 +241,7 @@ export class WellLogLoader {
             this._parseCSV(text);
 
             console.log(`Well logs loaded for ${this.wellLogs.size} wells`);
+            console.log(`Well names in log file: ${[...this.wellLogs.keys()].slice(0, 10).join(', ')}...`);
             console.log(`Available log types: ${[...this.availableLogTypes].join(', ')}`);
 
         } catch (error) {
@@ -251,14 +277,25 @@ export class WellLogLoader {
         for (let i = 1; i < rows.length; i++) {
             const cols = rows[i].split(',');
             
-            const wellName = cols[wellIdx]?.trim();
+            let wellName = cols[wellIdx]?.trim();
             const depth = parseFloat(cols[depthIdx]);
 
             if (!wellName || isNaN(depth)) continue;
 
-            // Get or create WellLogData
+            // Normalize well name - store both original and normalized versions
+            // Original: "GNK-065" -> Also store as "065" and "65"
+            const normalizedNames = this._getNormalizedNames(wellName);
+            
+            // Get or create WellLogData (use original name as key)
             if (!this.wellLogs.has(wellName)) {
                 this.wellLogs.set(wellName, new WellLogData(wellName));
+                
+                // Also store references with normalized names for easier lookup
+                for (const normName of normalizedNames) {
+                    if (!this.wellLogs.has(normName)) {
+                        this.wellLogs.set(normName, this.wellLogs.get(wellName));
+                    }
+                }
             }
             const wellLogData = this.wellLogs.get(wellName);
 
@@ -273,6 +310,34 @@ export class WellLogLoader {
         }
     }
 
+    /**
+     * Generate normalized name variants for a well
+     * @param {string} wellName 
+     * @returns {string[]}
+     */
+    _getNormalizedNames(wellName) {
+        const names = [];
+        
+        // If name is like "GNK-065", extract "065" and "65"
+        const match = wellName.match(/^GNK-(\d+)$/i);
+        if (match) {
+            const numPart = match[1];
+            names.push(numPart);                    // "065"
+            names.push(numPart.replace(/^0+/, '')); // "65"
+            names.push(numPart.padStart(3, '0'));   // "065"
+        }
+        
+        // If name is just a number, add variations
+        if (/^\d+$/.test(wellName)) {
+            names.push(`GNK-${wellName}`);
+            names.push(`GNK-${wellName.padStart(3, '0')}`);
+            names.push(wellName.replace(/^0+/, ''));
+            names.push(wellName.padStart(3, '0'));
+        }
+        
+        return names;
+    }
+
     getWellLogData(wellName) {
         return this.wellLogs.get(wellName);
     }
@@ -283,5 +348,13 @@ export class WellLogLoader {
 
     hasLogsForWell(wellName) {
         return this.wellLogs.has(wellName);
+    }
+
+    /**
+     * Get all well names in the log data
+     * @returns {string[]}
+     */
+    getWellNames() {
+        return [...this.wellLogs.keys()];
     }
 }

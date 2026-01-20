@@ -193,8 +193,10 @@ export class SceneManager {
         let newHoveredWell = null;
         
         for (let intersect of intersects) {
-            // Check if the intersected object is a well
-            if (intersect.object.userData && intersect.object.userData.type === 'well') {
+            // Check if the intersected object is a well AND is visible
+            if (intersect.object.userData && 
+                intersect.object.userData.type === 'well' &&
+                intersect.object.visible) {
                 this._showTooltip(intersect.object.userData.name, e.clientX, e.clientY);
                 newHoveredWell = intersect.object;
                 wellFound = true;
