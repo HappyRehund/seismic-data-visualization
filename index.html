@@ -44,7 +44,12 @@
     #crosslineControl { top: 70px; }
     #toggleControl { top: 130px; }
     #toggleFaultControl { top: 190px; }
-    #wellControl { top: 250px; max-height: 400px; overflow-y: auto; }
+    #wellControl { 
+      top: 250px; 
+      max-height: 450px; 
+      overflow-y: auto; 
+      min-width: 240px;
+    }
 
     #toggleHorizonBtn,
     #toggleFaultBtn,
@@ -82,7 +87,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 250px;
+      max-height: 350px;
       overflow-y: auto;
     }
 
@@ -90,7 +95,46 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 4px 0;
+      padding: 6px 4px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .well-item:last-child {
+      border-bottom: none;
+    }
+
+    .well-name {
+      flex: 1;
+      font-weight: 500;
+      min-width: 80px;
+      font-size: 13px;
+    }
+
+    .well-log-select {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 12px;
+      background: white;
+      cursor: pointer;
+      min-width: 70px;
+    }
+
+    .well-log-select:hover {
+      border-color: #4a90d9;
+    }
+
+    .well-log-select:focus {
+      outline: none;
+      border-color: #4a90d9;
+      box-shadow: 0 0 3px rgba(74, 144, 217, 0.3);
+    }
+
+    .well-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #4a90d9;
     }
 
     .well-item input[type="checkbox"] {

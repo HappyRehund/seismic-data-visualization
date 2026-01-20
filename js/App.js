@@ -28,6 +28,7 @@ import { InlinePlane, CrosslinePlane } from './components/SeismicPlane.js';
 import { HorizonManager } from './components/Horizon.js';
 import { FaultLoader } from './components/Fault.js';
 import { WellLoader } from './components/Well.js';
+import { WellLogLoader } from './components/WellLog.js';
 
 // UI
 import { UIManager } from './ui/UIControls.js';
@@ -44,6 +45,7 @@ class SeismicViewerApp {
         this.horizonManager = null;
         this.faultLoader = null;
         this.wellLoader = null;
+        this.wellLogLoader = null;
     }
 
     async init() {
@@ -80,6 +82,8 @@ class SeismicViewerApp {
         this.faultLoader = new FaultLoader(this.sceneManager);
 
         this.wellLoader = new WellLoader(this.sceneManager);
+        
+        this.wellLogLoader = new WellLogLoader();
     }
 
     _initUI() {
@@ -111,6 +115,18 @@ class SeismicViewerApp {
             await this.wellLoader.load('/well_coordinates.csv');
         } catch (e) {
             console.warn('Well file not found or invalid');
+        }
+
+        // Load well log data
+        try {
+            await this.wellLogLoader.load('/GNK_update.csv');
+            // Attach log data to wells
+            this.wellLoader.attachLogData(this.wellLogLoader);
+            // Refresh UI to show available logs
+            this.uiManager.refreshWellLogSelectors();
+            console.log('Well log data attached successfully');
+        } catch (e) {
+            console.warn('Well log file not found or invalid:', e);
         }
 
         const faultFiles = [

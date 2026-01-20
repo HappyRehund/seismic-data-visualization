@@ -1,4 +1,5 @@
 import { SeismicConfig, StyleConfig } from '../config/SeismicConfig.js';
+import { WellLog, WellLogConfig } from './WellLog.js';
 
 export class Well {
     constructor(sceneManager, name, inline, crossline, timeStart, timeEnd,
@@ -8,6 +9,11 @@ export class Well {
         this.mesh = null;
         this.originalColor = color;
         this.isHighlighted = false;
+
+        // Well log related
+        this.logData = null;           // WellLogData instance
+        this.currentLogType = 'None';  // Currently displayed log type
+        this.wellLog = null;           // Current WellLog visualization
 
         this._create(inline, crossline, timeStart, timeEnd, radius, color);
     }
@@ -57,6 +63,7 @@ export class Well {
 
     setVisible(visible) {
         if (this.mesh) this.mesh.visible = visible;
+        if (this.wellLog) this.wellLog.setVisible(visible);
     }
 
     highlight() {
@@ -76,7 +83,63 @@ export class Well {
         }
     }
 
+    /**
+     * Set the well log data for this well
+     * @param {WellLogData} logData 
+     */
+    setLogData(logData) {
+        this.logData = logData;
+    }
+
+    /**
+     * Display a specific log type
+     * @param {string} logType - Log type to display (e.g., 'GR', 'RT', 'None')
+     */
+    setLogType(logType) {
+        // Remove existing log visualization
+        if (this.wellLog) {
+            this.wellLog.dispose();
+            this.wellLog = null;
+        }
+
+        this.currentLogType = logType;
+
+        // Create new log visualization if not 'None'
+        if (logType !== 'None' && this.logData) {
+            const logDataArray = this.logData.getLogData(logType);
+            if (logDataArray && logDataArray.length > 0) {
+                this.wellLog = new WellLog(this, logDataArray, logType);
+                
+                // Match visibility with well
+                if (this.mesh && this.wellLog) {
+                    this.wellLog.setVisible(this.mesh.visible);
+                }
+            }
+        }
+    }
+
+    /**
+     * Get available log types for this well
+     * @returns {string[]}
+     */
+    getAvailableLogs() {
+        if (!this.logData) return ['None'];
+        return ['None', ...this.logData.getAvailableLogs()];
+    }
+
+    /**
+     * Get current log type
+     * @returns {string}
+     */
+    getCurrentLogType() {
+        return this.currentLogType;
+    }
+
     dispose() {
+        if (this.wellLog) {
+            this.wellLog.dispose();
+            this.wellLog = null;
+        }
         if (this.mesh) {
             this.sceneManager.remove(this.mesh);
             this.mesh.geometry.dispose();
@@ -199,6 +262,52 @@ export class WellLoader {
     isWellVisible(name) {
         const well = this.wellsMap.get(name);
         return well?.mesh?.visible ?? false;
+    }
+
+    /**
+     * Attach log data to wells
+     * @param {WellLogLoader} wellLogLoader 
+     */
+    attachLogData(wellLogLoader) {
+        for (const [name, well] of this.wellsMap) {
+            const logData = wellLogLoader.getWellLogData(name);
+            if (logData) {
+                well.setLogData(logData);
+                console.log(`Attached log data to well ${name}`);
+            }
+        }
+    }
+
+    /**
+     * Set log type for a specific well
+     * @param {string} wellName 
+     * @param {string} logType 
+     */
+    setWellLogType(wellName, logType) {
+        const well = this.wellsMap.get(wellName);
+        if (well) {
+            well.setLogType(logType);
+        }
+    }
+
+    /**
+     * Get available log types for a specific well
+     * @param {string} wellName 
+     * @returns {string[]}
+     */
+    getWellAvailableLogs(wellName) {
+        const well = this.wellsMap.get(wellName);
+        return well ? well.getAvailableLogs() : ['None'];
+    }
+
+    /**
+     * Get current log type for a specific well
+     * @param {string} wellName 
+     * @returns {string}
+     */
+    getWellCurrentLogType(wellName) {
+        const well = this.wellsMap.get(wellName);
+        return well ? well.getCurrentLogType() : 'None';
     }
 
     dispose() {

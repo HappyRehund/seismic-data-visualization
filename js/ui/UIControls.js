@@ -84,7 +84,8 @@ export class WellTogglePanel {
         this.container = document.getElementById(containerId);
         this.toggleAllBtn = document.getElementById(toggleAllBtnId);
         this.wellLoader = wellLoader;
-        this.checkboxes = new Map(); // Map of well name -> checkbox element
+        this.checkboxes = new Map();     // Map of well name -> checkbox element
+        this.logSelectors = new Map();   // Map of well name -> select element
         this.allVisible = true;
 
         this._initToggleAllButton();
@@ -110,6 +111,7 @@ export class WellTogglePanel {
         // Clear existing content
         this.container.innerHTML = '';
         this.checkboxes.clear();
+        this.logSelectors.clear();
 
         if (wellNames.length === 0) {
             this.container.innerHTML = '<div style="color: #888; font-style: italic;">No wells found</div>';
@@ -117,10 +119,11 @@ export class WellTogglePanel {
         }
 
         const sortedNames = [...wellNames].sort((a, b) => {
-            const numA = parseInt(a);
-            const numB = parseInt(b);
-            if (!isNaN(numA) && !isNaN(numB)) {
-                return numA - numB;
+            // Try to extract numeric part for natural sorting
+            const matchA = a.match(/(\d+)/);
+            const matchB = b.match(/(\d+)/);
+            if (matchA && matchB) {
+                return parseInt(matchA[1]) - parseInt(matchB[1]);
             }
             return a.localeCompare(b);
         });
@@ -129,24 +132,78 @@ export class WellTogglePanel {
             const wellItem = document.createElement('div');
             wellItem.className = 'well-item';
 
+            // Well name label
+            const label = document.createElement('span');
+            label.className = 'well-name';
+            label.textContent = name;
+
+            // Log type selector dropdown
+            const logSelect = document.createElement('select');
+            logSelect.className = 'well-log-select';
+            logSelect.id = `welllog_${name}`;
+            
+            // Get available logs for this well
+            const availableLogs = this.wellLoader.getWellAvailableLogs(name);
+            availableLogs.forEach(logType => {
+                const option = document.createElement('option');
+                option.value = logType;
+                option.textContent = logType;
+                logSelect.appendChild(option);
+            });
+
+            // Set current selection
+            const currentLog = this.wellLoader.getWellCurrentLogType(name);
+            logSelect.value = currentLog;
+
+            logSelect.addEventListener('change', () => {
+                this.wellLoader.setWellLogType(name, logSelect.value);
+            });
+
+            // Visibility checkbox
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = `well_${name}`;
+            checkbox.className = 'well-checkbox';
             checkbox.checked = true;
+            checkbox.title = 'Show/Hide well';
             checkbox.addEventListener('change', () => {
                 this.wellLoader.setWellVisible(name, checkbox.checked);
                 this._updateToggleAllButton();
             });
 
-            const label = document.createElement('label');
-            label.htmlFor = `well_${name}`;
-            label.textContent = `Well ${name}`;
-
-            wellItem.appendChild(checkbox);
             wellItem.appendChild(label);
+            wellItem.appendChild(logSelect);
+            wellItem.appendChild(checkbox);
             this.container.appendChild(wellItem);
 
             this.checkboxes.set(name, checkbox);
+            this.logSelectors.set(name, logSelect);
+        });
+    }
+
+    /**
+     * Refresh log selectors after log data is loaded
+     */
+    refreshLogSelectors() {
+        this.logSelectors.forEach((select, name) => {
+            const currentValue = select.value;
+            
+            // Clear existing options
+            select.innerHTML = '';
+            
+            // Get updated available logs
+            const availableLogs = this.wellLoader.getWellAvailableLogs(name);
+            availableLogs.forEach(logType => {
+                const option = document.createElement('option');
+                option.value = logType;
+                option.textContent = logType;
+                select.appendChild(option);
+            });
+
+            // Restore selection if still available
+            if (availableLogs.includes(currentValue)) {
+                select.value = currentValue;
+            }
         });
     }
 
@@ -227,6 +284,15 @@ export class UIManager {
         const existingWells = wellLoader.getWellNames();
         if (existingWells.length > 0) {
             this.controls.wellPanel.populateWells(existingWells);
+        }
+    }
+
+    /**
+     * Refresh well log selectors after log data is loaded
+     */
+    refreshWellLogSelectors() {
+        if (this.controls.wellPanel) {
+            this.controls.wellPanel.refreshLogSelectors();
         }
     }
 
