@@ -1,18 +1,6 @@
-/**
- * SeismicPlane.js
- * ================
- * Component for displaying inline and crossline seismic slice images.
- *
- * SINGLE RESPONSIBILITY: Seismic plane rendering only
- * OPEN/CLOSED: Extend via subclass, don't modify
- */
-
 import { SeismicConfig, PathConfig } from '../config/SeismicConfig.js';
 import { CoordinateSystem } from '../core/CoordinateSystem.js';
 
-/**
- * Base class for seismic planes
- */
 class SeismicPlaneBase {
     constructor(sceneManager) {
         this.sceneManager = sceneManager;
@@ -21,11 +9,6 @@ class SeismicPlaneBase {
         this.currentIndex = 0;
     }
 
-    /**
-     * Create the plane geometry and material
-     * @param {THREE.Texture} texture - Initial texture
-     * @returns {THREE.Mesh} The plane mesh
-     */
     _createPlane(texture) {
         const geometry = new THREE.PlaneGeometry(
             SeismicConfig.imageWidth,
@@ -42,10 +25,6 @@ class SeismicPlaneBase {
         return new THREE.Mesh(geometry, material);
     }
 
-    /**
-     * Update the plane's texture with optimized settings
-     * @param {string} path - Path to the new texture image
-     */
     _updateTexture(path) {
         this.loader.load(path, (texture) => {
             texture.generateMipmaps = false;
@@ -60,20 +39,12 @@ class SeismicPlaneBase {
         });
     }
 
-    /**
-     * Set the current slice index
-     * @param {number} index - New index value
-     */
     setIndex(index) {
         this.currentIndex = index;
         this._updatePosition();
         this._loadTexture();
     }
 
-    /**
-     * Get current index
-     * @returns {number}
-     */
     getIndex() {
         return this.currentIndex;
     }
@@ -84,9 +55,6 @@ class SeismicPlaneBase {
     _getImagePath(index) { throw new Error('Must implement _getImagePath'); }
 }
 
-/**
- * Inline seismic plane (perpendicular to X axis)
- */
 export class InlinePlane extends SeismicPlaneBase {
     constructor(sceneManager) {
         super(sceneManager);
@@ -94,7 +62,6 @@ export class InlinePlane extends SeismicPlaneBase {
     }
 
     _initialize() {
-        // Load first texture
         this.loader.load(PathConfig.getInlinePath(0), (texture) => {
             this.plane = this._createPlane(texture);
             this.plane.rotation.y = -Math.PI / 2;
@@ -117,17 +84,11 @@ export class InlinePlane extends SeismicPlaneBase {
         this._updateTexture(PathConfig.getInlinePath(this.currentIndex));
     }
 
-    /**
-     * Get maximum index for slider
-     */
     static getMaxIndex() {
         return SeismicConfig.maxInlineIndex;
     }
 }
 
-/**
- * Crossline seismic plane (perpendicular to Z axis)
- */
 export class CrosslinePlane extends SeismicPlaneBase {
     constructor(sceneManager) {
         super(sceneManager);
@@ -135,7 +96,6 @@ export class CrosslinePlane extends SeismicPlaneBase {
     }
 
     _initialize() {
-        // Load first texture
         this.loader.load(PathConfig.getCrosslinePath(0), (texture) => {
             this.plane = this._createPlane(texture);
             this.plane.rotation.y = 0;
@@ -158,9 +118,6 @@ export class CrosslinePlane extends SeismicPlaneBase {
         this._updateTexture(PathConfig.getCrosslinePath(this.currentIndex));
     }
 
-    /**
-     * Get maximum index for slider
-     */
     static getMaxIndex() {
         return SeismicConfig.maxCrosslineIndex;
     }

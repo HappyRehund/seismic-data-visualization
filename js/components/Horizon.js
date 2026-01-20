@@ -1,19 +1,8 @@
-/**
- * Horizon.js
- * ===========
- * Component for loading and displaying seismic horizon surfaces.
- *
- * SINGLE RESPONSIBILITY: Horizon rendering only
- * Uses CoordinateSystem for all coordinate transformations
- */
-
 import { SeismicConfig, StyleConfig } from '../config/SeismicConfig.js';
 import { CoordinateSystem } from '../core/CoordinateSystem.js';
 
 export class Horizon {
-    /**
-     * @param {SceneManager} sceneManager - The scene manager instance
-     */
+
     constructor(sceneManager) {
         this.sceneManager = sceneManager;
         this.pointCloud = null;
@@ -24,12 +13,7 @@ export class Horizon {
         this.maxZ = -Infinity;
     }
 
-    /**
-     * Load horizon data from CSV file
-     * @param {string} csvUrl - Path to the CSV file
-     * @param {string} zColumnName - Name of the Z/depth column
-     * @returns {Promise<void>}
-     */
+
     async load(csvUrl, zColumnName) {
         console.log(`Loading horizon: ${csvUrl}`);
 
@@ -56,10 +40,6 @@ export class Horizon {
         }
     }
 
-    /**
-     * Parse CSV text into structured data
-     * @private
-     */
     _parseCSV(text, zColumnName) {
         const lines = text.trim().split('\n');
         const headers = lines[0].split(',').map(h => h.trim());
@@ -112,10 +92,6 @@ export class Horizon {
         };
     }
 
-    /**
-     * Create Three.js point cloud from parsed data
-     * @private
-     */
     _createPointCloud(data) {
         const { points, ranges } = data;
         const positions = [];
@@ -160,10 +136,6 @@ export class Horizon {
         this.sceneManager.add(this.pointCloud);
     }
 
-    /**
-     * Toggle horizon visibility
-     * @param {boolean} [visible] - Force visibility state
-     */
     setVisible(visible) {
         if (visible === undefined) {
             this.visible = !this.visible;
@@ -176,17 +148,11 @@ export class Horizon {
         }
     }
 
-    /**
-     * Check if horizon is visible
-     * @returns {boolean}
-     */
     isVisible() {
         return this.visible;
     }
 
-    /**
-     * Remove horizon from scene
-     */
+
     dispose() {
         if (this.pointCloud) {
             this.sceneManager.remove(this.pointCloud);
@@ -197,21 +163,13 @@ export class Horizon {
     }
 }
 
-/**
- * Factory for creating and managing multiple horizons
- */
+
 export class HorizonManager {
     constructor(sceneManager) {
         this.sceneManager = sceneManager;
         this.horizons = [];
     }
 
-    /**
-     * Load a new horizon
-     * @param {string} csvUrl - Path to CSV file
-     * @param {string} zColumnName - Z column name
-     * @returns {Promise<Horizon>}
-     */
     async addHorizon(csvUrl, zColumnName) {
         const horizon = new Horizon(this.sceneManager);
         await horizon.load(csvUrl, zColumnName);
@@ -219,25 +177,16 @@ export class HorizonManager {
         return horizon;
     }
 
-    /**
-     * Toggle all horizons visibility
-     */
     toggleAll() {
         const newState = this.horizons.length > 0 ? !this.horizons[0].isVisible() : true;
         this.horizons.forEach(h => h.setVisible(newState));
         return newState;
     }
 
-    /**
-     * Set visibility for all horizons
-     */
     setAllVisible(visible) {
         this.horizons.forEach(h => h.setVisible(visible));
     }
 
-    /**
-     * Get all horizons
-     */
     getAll() {
         return this.horizons;
     }

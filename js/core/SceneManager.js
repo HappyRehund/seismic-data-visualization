@@ -1,12 +1,3 @@
-/**
- * SceneManager.js
- * ================
- * Manages Three.js scene, camera, renderer, and lighting.
- *
- * SINGLE RESPONSIBILITY: Scene infrastructure only
- * DEPENDENCY INJECTION: Receives config, doesn't know about components
- */
-
 import { SeismicConfig, CameraConfig, StyleConfig } from '../config/SeismicConfig.js';
 import { CoordinateSystem } from './CoordinateSystem.js';
 
@@ -35,9 +26,6 @@ export class SceneManager {
         this._setupMouseInteraction();
     }
 
-    /**
-     * Initialize Three.js scene components
-     */
     _init() {
         // Create scene
         this.scene = new THREE.Scene();
@@ -72,17 +60,11 @@ export class SceneManager {
         this._updateCameraPosition();
     }
 
-    /**
-     * Setup scene lighting
-     */
     _setupLighting() {
         const ambientLight = new THREE.AmbientLight(0xffffff);
         this.scene.add(ambientLight);
     }
 
-    /**
-     * Create wireframe bounding box for reference
-     */
     _createBoundingBox() {
         const { imageWidth, imageHeight } = SeismicConfig;
 
@@ -96,9 +78,6 @@ export class SceneManager {
         this.scene.add(wireframe);
     }
 
-    /**
-     * Setup mouse-based camera orbit controls
-     */
     _setupCameraControls() {
         const canvas = this.renderer.domElement;
 
@@ -115,9 +94,6 @@ export class SceneManager {
         canvas.addEventListener('wheel', (e) => this._handleMouseWheel(e));
     }
 
-    /**
-     * Handle mouse drag for rotation
-     */
     _handleMouseMove(e) {
         if (!this.orbitState.isDragging) return;
 
@@ -136,9 +112,6 @@ export class SceneManager {
         this.orbitState.previousMouse = { x: e.clientX, y: e.clientY };
     }
 
-    /**
-     * Handle mouse wheel for zoom
-     */
     _handleMouseWheel(e) {
         this.orbitState.radius += e.deltaY * 2;
         this.orbitState.radius = Math.max(
@@ -148,9 +121,6 @@ export class SceneManager {
         this._updateCameraPosition();
     }
 
-    /**
-     * Update camera position based on orbit state
-     */
     _updateCameraPosition() {
         const center = CoordinateSystem.getBoundingBoxCenter();
         const target = CoordinateSystem.getCameraTarget();
@@ -164,9 +134,6 @@ export class SceneManager {
         this.camera.lookAt(target.x, target.y, target.z);
     }
 
-    /**
-     * Setup window resize handler
-     */
     _setupResizeHandler() {
         window.addEventListener('resize', () => {
             this.camera.aspect = window.innerWidth / window.innerHeight;
@@ -175,25 +142,14 @@ export class SceneManager {
         });
     }
 
-    /**
-     * Add object to scene
-     * @param {THREE.Object3D} object - Object to add
-     */
     add(object) {
         this.scene.add(object);
     }
 
-    /**
-     * Remove object from scene
-     * @param {THREE.Object3D} object - Object to remove
-     */
     remove(object) {
         this.scene.remove(object);
     }
 
-    /**
-     * Start the render loop
-     */
     startRenderLoop() {
         const animate = () => {
             requestAnimationFrame(animate);
@@ -202,10 +158,6 @@ export class SceneManager {
         animate();
     }
 
-    /**
-     * Setup mouse interaction for tooltips
-     * @private
-     */
     _setupMouseInteraction() {
         this.tooltip = document.getElementById('wellTooltip');
         
@@ -225,15 +177,11 @@ export class SceneManager {
         });
     }
 
-    /**
-     * Check if mouse is hovering over a well
-     * @private
-     */
-    _checkWellHover(event) {
+    _checkWellHover(e) {
         // Calculate mouse position in normalized device coordinates
         const rect = this.renderer.domElement.getBoundingClientRect();
-        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
         // Update raycaster
         this.raycaster.setFromCamera(this.mouse, this.camera);
@@ -247,7 +195,7 @@ export class SceneManager {
         for (let intersect of intersects) {
             // Check if the intersected object is a well
             if (intersect.object.userData && intersect.object.userData.type === 'well') {
-                this._showTooltip(intersect.object.userData.name, event.clientX, event.clientY);
+                this._showTooltip(intersect.object.userData.name, e.clientX, e.clientY);
                 newHoveredWell = intersect.object;
                 wellFound = true;
                 break;
@@ -274,10 +222,6 @@ export class SceneManager {
         }
     }
 
-    /**
-     * Show tooltip at mouse position
-     * @private
-     */
     _showTooltip(wellName, x, y) {
         if (!this.tooltip) return;
         
@@ -287,10 +231,6 @@ export class SceneManager {
         this.tooltip.style.top = `${y + 15}px`;
     }
 
-    /**
-     * Hide tooltip
-     * @private
-     */
     _hideTooltip() {
         if (!this.tooltip) return;
         this.tooltip.style.display = 'none';

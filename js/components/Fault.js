@@ -1,18 +1,6 @@
-/**
- * Fault.js
- * =========
- * Component for loading and displaying fault lines and surfaces.
- *
- * SINGLE RESPONSIBILITY: Fault rendering only
- * Supports both 2D line faults and 3D surface faults
- */
-
 import { StyleConfig } from '../config/SeismicConfig.js';
 import { CoordinateSystem } from '../core/CoordinateSystem.js';
 
-/**
- * Single fault segment (line between two points)
- */
 export class FaultSegment {
     constructor(sceneManager, point1, point2, name, color = StyleConfig.defaultFaultColor) {
         this.sceneManager = sceneManager;
@@ -48,9 +36,6 @@ export class FaultSegment {
     }
 }
 
-/**
- * 3D fault panel (surface between four points)
- */
 export class FaultPanel {
     constructor(sceneManager, p1a, p1b, p2a, p2b, color = StyleConfig.defaultFault3DColor) {
         this.sceneManager = sceneManager;
@@ -107,19 +92,12 @@ export class FaultPanel {
     }
 }
 
-/**
- * Fault loader - handles CSV parsing and fault creation
- */
 export class FaultLoader {
     constructor(sceneManager) {
         this.sceneManager = sceneManager;
         this.faults = [];
     }
 
-    /**
-     * Load 2D fault lines from CSV
-     * @param {string} path - Path to CSV file
-     */
     async loadFaultLines(path) {
         console.log(`Loading fault lines: ${path}`);
 
@@ -147,10 +125,6 @@ export class FaultLoader {
         }
     }
 
-    /**
-     * Load 3D fault surfaces from CSV
-     * @param {string} path - Path to CSV file
-     */
     async loadFaultSurfaces(path) {
         console.log(`Loading fault surfaces: ${path}`);
 
@@ -188,10 +162,6 @@ export class FaultLoader {
         }
     }
 
-    /**
-     * Parse fault CSV data
-     * @private
-     */
     _parseCSV(text) {
         const delimiter = ',';
         const rows = text.trim().split(/\r?\n/);
@@ -225,11 +195,6 @@ export class FaultLoader {
         return faults;
     }
 
-    /**
-     * Load all fault files from a directory
-     * @param {string[]} faultFiles - Array of fault file paths
-     * @param {boolean} as3D - Whether to load as 3D surfaces (true) or 2D lines (false)
-     */
     async loadAllFaults(faultFiles, as3D = true) {
         console.log(`Loading ${faultFiles.length} fault files...`);
         
@@ -248,26 +213,16 @@ export class FaultLoader {
         console.log(`All faults loaded: ${this.faults.length} objects created`);
     }
 
-    /**
-     * Set visibility for all faults
-     * @param {boolean} visible - Visibility state
-     */
     setAllVisible(visible) {
         this.faults.forEach(f => f.setVisible(visible));
     }
 
-    /**
-     * Toggle all faults visibility
-     */
     toggleAll() {
         const newState = this.faults.length > 0 ? !this.faults[0].line?.visible ?? !this.faults[0].mesh?.visible : true;
         this.setAllVisible(newState);
         return newState;
     }
 
-    /**
-     * Remove all faults from scene
-     */
     dispose() {
         this.faults.forEach(f => f.dispose());
         this.faults = [];

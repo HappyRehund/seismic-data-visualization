@@ -32,9 +32,6 @@ import { WellLoader } from './components/Well.js';
 // UI
 import { UIManager } from './ui/UIControls.js';
 
-/**
- * Main Seismic Viewer Application
- */
 class SeismicViewerApp {
     constructor() {
         // Core systems
@@ -49,9 +46,6 @@ class SeismicViewerApp {
         this.wellLoader = null;
     }
 
-    /**
-     * Initialize the application
-     */
     async init() {
         console.log('Initializing Seismic Viewer...');
 
@@ -73,37 +67,21 @@ class SeismicViewerApp {
         console.log('Seismic Viewer initialized successfully!');
     }
 
-    /**
-     * Initialize Three.js scene
-     * @private
-     */
     _initScene() {
         this.sceneManager = new SceneManager();
     }
 
-    /**
-     * Initialize seismic visualization components
-     * @private
-     */
     _initComponents() {
-        // Seismic slice planes
         this.inlinePlane = new InlinePlane(this.sceneManager);
         this.crosslinePlane = new CrosslinePlane(this.sceneManager);
 
-        // Horizon manager for multiple horizons
         this.horizonManager = new HorizonManager(this.sceneManager);
 
-        // Fault loader
         this.faultLoader = new FaultLoader(this.sceneManager);
 
-        // Well loader
         this.wellLoader = new WellLoader(this.sceneManager);
     }
 
-    /**
-     * Initialize UI controls and connect to components
-     * @private
-     */
     _initUI() {
         this.uiManager = new UIManager();
 
@@ -121,12 +99,7 @@ class SeismicViewerApp {
         this.uiManager.createWellPanel(this.wellLoader);
     }
 
-    /**
-     * Load all data files
-     * @private
-     */
     async _loadData() {
-        // Load horizons
         try {
             await this.horizonManager.addHorizon('/horizon.csv', 'top');
             await this.horizonManager.addHorizon('/horizon.csv', 'bottom');
@@ -134,14 +107,12 @@ class SeismicViewerApp {
             console.warn('Horizon file not found or invalid:', e);
         }
 
-        // Load wells
         try {
             await this.wellLoader.load('/well_coordinates.csv');
         } catch (e) {
             console.warn('Well file not found or invalid');
         }
 
-        // Load faults
         const faultFiles = [
             'CSV_fault/F1(IL^Thrust Fault).csv',
             'CSV_fault/F2(XL^Normal Fault).csv',
@@ -280,55 +251,28 @@ class SeismicViewerApp {
         }
     }
 
-    // ========================================
-    // PUBLIC API FOR ADDING COMPONENTS
-    // ========================================
-
-    /**
-     * Add a horizon from CSV file
-     * @param {string} csvPath - Path to CSV file
-     * @param {string} zColumn - Name of Z/depth column
-     */
     async addHorizon(csvPath, zColumn = 'Z') {
         return await this.horizonManager.addHorizon(csvPath, zColumn);
     }
 
-    /**
-     * Load 2D fault lines
-     * @param {string} csvPath - Path to CSV file
-     */
+
     async addFaultLines(csvPath) {
         await this.faultLoader.loadFaultLines(csvPath);
     }
 
-    /**
-     * Load 3D fault surfaces
-     * @param {string} csvPath - Path to CSV file
-     */
     async addFaultSurfaces(csvPath) {
         await this.faultLoader.loadFaultSurfaces(csvPath);
     }
 
-    /**
-     * Load wells from CSV
-     * @param {string} csvPath - Path to CSV file
-     */
     async addWells(csvPath) {
         await this.wellLoader.load(csvPath);
     }
 }
 
-// ========================================
-// APPLICATION STARTUP
-// ========================================
-
-// Create and initialize app when DOM is ready
 const app = new SeismicViewerApp();
 
-// Export for console access (debugging)
 window.seismicApp = app;
 
-// Initialize
 app.init().catch(error => {
     console.error('Failed to initialize application:', error);
 });

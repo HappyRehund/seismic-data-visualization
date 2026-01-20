@@ -1,27 +1,6 @@
-/**
- * Well.js
- * ========
- * Component for loading and displaying well pipes.
- *
- * SINGLE RESPONSIBILITY: Well rendering only
- */
-
 import { SeismicConfig, StyleConfig } from '../config/SeismicConfig.js';
 
-/**
- * Single well pipe representation
- */
 export class Well {
-    /**
-     * @param {SceneManager} sceneManager - Scene manager instance
-     * @param {string} name - Well name
-     * @param {number} inline - Inline position
-     * @param {number} crossline - Crossline position
-     * @param {number} timeStart - Top of well (time)
-     * @param {number} timeEnd - Bottom of well (time)
-     * @param {number} [radius] - Pipe radius
-     * @param {number} [color] - Pipe color
-     */
     constructor(sceneManager, name, inline, crossline, timeStart, timeEnd,
                 radius = StyleConfig.wellRadius, color = StyleConfig.defaultWellColor) {
         this.sceneManager = sceneManager;
@@ -72,24 +51,14 @@ export class Well {
         this.sceneManager.add(this.mesh);
     }
 
-    /**
-     * Map time value to Y coordinate
-     * @private
-     */
     _mapTimeToY(time) {
         return time - 200;
     }
 
-    /**
-     * Toggle visibility
-     */
     setVisible(visible) {
         if (this.mesh) this.mesh.visible = visible;
     }
 
-    /**
-     * Highlight well (darken color on hover)
-     */
     highlight() {
         if (this.mesh && !this.isHighlighted) {
             const color = new THREE.Color(this.originalColor);
@@ -100,9 +69,6 @@ export class Well {
         }
     }
 
-    /**
-     * Remove highlight (restore original color)
-     */
     unhighlight() {
         if (this.mesh && this.isHighlighted) {
             this.mesh.material.color.set(this.originalColor);
@@ -110,9 +76,6 @@ export class Well {
         }
     }
 
-    /**
-     * Remove from scene
-     */
     dispose() {
         if (this.mesh) {
             this.sceneManager.remove(this.mesh);
@@ -122,9 +85,6 @@ export class Well {
     }
 }
 
-/**
- * Well loader - handles CSV parsing and well creation
- */
 export class WellLoader {
     constructor(sceneManager) {
         this.sceneManager = sceneManager;
@@ -133,11 +93,6 @@ export class WellLoader {
         this.onWellsLoaded = null; // Callback when wells are loaded
     }
 
-    /**
-     * Load wells from CSV file
-     * @param {string} path - Path to CSV file
-     * @param {number} [defaultTimeEnd=1200] - Default bottom time if not in CSV
-     */
     async load(path, defaultTimeEnd = 1200) {
         console.log(`Loading wells: ${path}`);
 
@@ -200,7 +155,6 @@ export class WellLoader {
 
             console.log(`Wells loaded: ${this.wells.length}`);
 
-            // Trigger callback if set
             if (this.onWellsLoaded) {
                 this.onWellsLoaded(this.getWellNames());
             }
@@ -209,28 +163,14 @@ export class WellLoader {
         }
     }
 
-    /**
-     * Get all well names
-     * @returns {string[]} Array of well names
-     */
     getWellNames() {
         return this.wells.map(w => w.name);
     }
 
-    /**
-     * Get a well by name
-     * @param {string} name - Well name
-     * @returns {Well|undefined}
-     */
     getWell(name) {
         return this.wellsMap.get(name);
     }
 
-    /**
-     * Set visibility for a specific well
-     * @param {string} name - Well name
-     * @param {boolean} visible - Visibility state
-     */
     setWellVisible(name, visible) {
         const well = this.wellsMap.get(name);
         if (well) {
@@ -238,28 +178,14 @@ export class WellLoader {
         }
     }
 
-    /**
-     * Set visibility for multiple wells
-     * @param {string[]} names - Array of well names
-     * @param {boolean} visible - Visibility state
-     */
     setWellsVisible(names, visible) {
         names.forEach(name => this.setWellVisible(name, visible));
     }
 
-    /**
-     * Set visibility for all wells
-     * @param {boolean} visible - Visibility state
-     */
     setAllVisible(visible) {
         this.wells.forEach(w => w.setVisible(visible));
     }
 
-    /**
-     * Toggle visibility for a specific well
-     * @param {string} name - Well name
-     * @returns {boolean} New visibility state
-     */
     toggleWell(name) {
         const well = this.wellsMap.get(name);
         if (well) {
@@ -270,19 +196,11 @@ export class WellLoader {
         return false;
     }
 
-    /**
-     * Check if a well is visible
-     * @param {string} name - Well name
-     * @returns {boolean}
-     */
     isWellVisible(name) {
         const well = this.wellsMap.get(name);
         return well?.mesh?.visible ?? false;
     }
 
-    /**
-     * Remove all wells
-     */
     dispose() {
         this.wells.forEach(w => w.dispose());
         this.wells = [];
