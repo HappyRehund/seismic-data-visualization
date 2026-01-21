@@ -83,12 +83,14 @@ export class WellTogglePanel {
     constructor(containerId, toggleAllBtnId, wellLoader) {
         this.container = document.getElementById(containerId);
         this.toggleAllBtn = document.getElementById(toggleAllBtnId);
+        this.setAllLogTypeSelect = document.getElementById('setAllLogTypeSelect');
         this.wellLoader = wellLoader;
         this.checkboxes = new Map();     // Map of well name -> checkbox element
         this.logSelectors = new Map();   // Map of well name -> select element
         this.allVisible = true;
 
         this._initToggleAllButton();
+        this._initSetAllLogType();
     }
 
     _initToggleAllButton() {
@@ -97,10 +99,32 @@ export class WellTogglePanel {
                 this.allVisible = !this.allVisible;
                 this.toggleAllBtn.textContent = this.allVisible ? 'Hide All' : 'Show All';
                 this.wellLoader.setAllVisible(this.allVisible);
-                
+
                 this.checkboxes.forEach((checkbox) => {
                     checkbox.checked = this.allVisible;
                 });
+            });
+        }
+    }
+
+    _initSetAllLogType() {
+        if (this.setAllLogTypeSelect) {
+            this.setAllLogTypeSelect.addEventListener('change', () => {
+                const selectedLogType = this.setAllLogTypeSelect.value;
+                if (selectedLogType && selectedLogType !== '') {
+                    // Set all wells to this log type
+                    this.wellLoader.setAllWellsLogType(selectedLogType);
+
+                    // Update all individual dropdowns to reflect the change
+                    this.logSelectors.forEach((select) => {
+                        if ([...select.options].some(opt => opt.value === selectedLogType)) {
+                            select.value = selectedLogType;
+                        }
+                    });
+
+                    // Reset the "Set All" selector back to placeholder
+                    this.setAllLogTypeSelect.value = '';
+                }
             });
         }
     }
@@ -139,7 +163,7 @@ export class WellTogglePanel {
             // Well name label
             const label = document.createElement('span');
             label.className = 'well-name';
-            
+
             if (hasDuplicates) {
                 label.textContent = `${name} (+${well.duplicateNames.length})`;
                 label.title = `Includes: ${well.duplicateNames.join(', ')}`;
@@ -152,7 +176,7 @@ export class WellTogglePanel {
             const logSelect = document.createElement('select');
             logSelect.className = 'well-log-select';
             logSelect.id = `welllog_${name}`;
-            
+
             // Get available logs for this well
             const availableLogs = this.wellLoader.getWellAvailableLogs(name);
             availableLogs.forEach(logType => {
@@ -196,12 +220,40 @@ export class WellTogglePanel {
      * Refresh log selectors after log data is loaded
      */
     refreshLogSelectors() {
+        // Update the "Set All" dropdown with all available log types
+        if (this.setAllLogTypeSelect) {
+            const allLogTypes = new Set(['None']);
+
+            // Collect all unique log types across all wells
+            this.wellLoader.wells.forEach(well => {
+                if (well.logData) {
+                    well.getAvailableLogs().forEach(log => allLogTypes.add(log));
+                }
+            });
+
+            // Clear and repopulate Set All dropdown
+            this.setAllLogTypeSelect.innerHTML = '<option value="">Set All...</option>';
+            [...allLogTypes].filter(log => log !== 'None').sort().forEach(logType => {
+                const option = document.createElement('option');
+                option.value = logType;
+                option.textContent = logType;
+                this.setAllLogTypeSelect.appendChild(option);
+            });
+
+            // Add None option at the end
+            const noneOption = document.createElement('option');
+            noneOption.value = 'None';
+            noneOption.textContent = 'None';
+            this.setAllLogTypeSelect.appendChild(noneOption);
+        }
+
+        // Update individual well selectors
         this.logSelectors.forEach((select, name) => {
             const currentValue = select.value;
-            
+
             // Clear existing options
             select.innerHTML = '';
-            
+
             // Get updated available logs
             const availableLogs = this.wellLoader.getWellAvailableLogs(name);
             availableLogs.forEach(logType => {

@@ -82,7 +82,7 @@ class SeismicViewerApp {
         this.faultLoader = new FaultLoader(this.sceneManager);
 
         this.wellLoader = new WellLoader(this.sceneManager);
-        
+
         this.wellLogLoader = new WellLogLoader();
     }
 
@@ -95,10 +95,10 @@ class SeismicViewerApp {
 
         // Connect toggle button to horizons
         this.uiManager.createHorizonToggle(this.horizonManager);
-        
+
         // Connect toggle button to faults
         this.uiManager.createFaultToggle(this.faultLoader);
-        
+
         // Connect well panel to well loader
         this.uiManager.createWellPanel(this.wellLoader);
     }
@@ -259,7 +259,7 @@ class SeismicViewerApp {
             'CSV_fault/F131(IL^Normal Fault).csv',
             'CSV_fault/F132 (IL^Normal Fault).csv'
         ];
-        
+
         try {
             await this.faultLoader.loadAllFaults(faultFiles, true); // Load as 3D surfaces
         } catch (e) {
@@ -270,7 +270,6 @@ class SeismicViewerApp {
     async addHorizon(csvPath, zColumn = 'Z') {
         return await this.horizonManager.addHorizon(csvPath, zColumn);
     }
-
 
     async addFaultLines(csvPath) {
         await this.faultLoader.loadFaultLines(csvPath);

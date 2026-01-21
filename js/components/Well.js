@@ -1,6 +1,6 @@
 import { SeismicConfig, StyleConfig } from '../config/SeismicConfig.js';
-import { WellLog, WellLogConfig } from './WellLog.js';
-
+import { WellLog } from './WellLog.js';
+import { WellLogConfig } from '../config/WellLogConfig.js';
 export class Well {
     constructor(sceneManager, name, inline, crossline, timeStart, timeEnd,
                 radius = StyleConfig.wellRadius, color = StyleConfig.defaultWellColor) {
@@ -50,14 +50,14 @@ export class Well {
             -centerY / SeismicConfig.timeSize * SeismicConfig.imageHeight + SeismicConfig.timeSize,
             z
         );
-        
+
         // Add user data for identification and highlighting
         this.mesh.userData = {
             type: 'well',
             name: this.name,
             wellInstance: this // Store reference to this Well instance
         };
-        
+
         this.sceneManager.add(this.mesh);
     }
 
@@ -89,7 +89,7 @@ export class Well {
 
     /**
      * Set the well log data for this well
-     * @param {WellLogData} logData 
+     * @param {WellLogData} logData
      */
     setLogData(logData) {
         this.logData = logData;
@@ -113,7 +113,7 @@ export class Well {
             const logDataArray = this.logData.getLogData(logType);
             if (logDataArray && logDataArray.length > 0) {
                 this.wellLog = new WellLog(this, logDataArray, logType);
-                
+
                 // Match visibility with well
                 if (this.mesh && this.wellLog) {
                     this.wellLog.setVisible(this.mesh.visible);
@@ -178,7 +178,7 @@ export class WellLoader {
             // Track coordinates to detect duplicates
             // key: "inline,crossline" -> { primaryName, duplicates: [] }
             const coordinateMap = new Map();
-            
+
             // First pass: identify all wells and group by coordinates
             const wellDataList = [];
             for (let i = 1; i < rows.length; i++) {
@@ -196,7 +196,7 @@ export class WellLoader {
             // Group wells by coordinates
             for (const wellData of wellDataList) {
                 const coordKey = `${wellData.inline},${wellData.crossline}`;
-                
+
                 if (!coordinateMap.has(coordKey)) {
                     coordinateMap.set(coordKey, {
                         primary: wellData,
@@ -210,7 +210,7 @@ export class WellLoader {
             // Second pass: create wells (only primary wells, with duplicate info)
             for (const [coordKey, coordData] of coordinateMap) {
                 const { primary, duplicates } = coordData;
-                
+
                 // Skip if we already have this well name
                 if (this.wellsMap.has(primary.name)) {
                     console.log(`Skipping duplicate well name: ${primary.name}`);
@@ -231,13 +231,13 @@ export class WellLoader {
                     0,              // timeStart
                     defaultTimeEnd  // timeEnd
                 );
-                
+
                 // Store duplicate names for reference
                 well.duplicateNames = duplicates;
-                
+
                 this.wells.push(well);
                 this.wellsMap.set(primary.name, well);
-                
+
                 // Also map duplicate names to the same well for log data matching
                 for (const dupName of duplicates) {
                     if (!this.wellsMap.has(dupName)) {
@@ -296,11 +296,11 @@ export class WellLoader {
 
     /**
      * Attach log data to wells
-     * @param {WellLogLoader} wellLogLoader 
+     * @param {WellLogLoader} wellLogLoader
      */
     attachLogData(wellLogLoader) {
         let attachedCount = 0;
-        
+
         for (const [name, well] of this.wellsMap) {
             // Try multiple name formats to match well log data
             const namesToTry = [
@@ -330,14 +330,14 @@ export class WellLoader {
                 console.log(`Attached log data to well ${name} (matched as ${matchedName})`);
             }
         }
-        
+
         console.log(`Total wells with log data: ${attachedCount}/${this.wellsMap.size}`);
     }
 
     /**
      * Set log type for a specific well
-     * @param {string} wellName 
-     * @param {string} logType 
+     * @param {string} wellName
+     * @param {string} logType
      */
     setWellLogType(wellName, logType) {
         const well = this.wellsMap.get(wellName);
@@ -348,7 +348,7 @@ export class WellLoader {
 
     /**
      * Get available log types for a specific well
-     * @param {string} wellName 
+     * @param {string} wellName
      * @returns {string[]}
      */
     getWellAvailableLogs(wellName) {
@@ -358,12 +358,28 @@ export class WellLoader {
 
     /**
      * Get current log type for a specific well
-     * @param {string} wellName 
+     * @param {string} wellName
      * @returns {string}
      */
     getWellCurrentLogType(wellName) {
         const well = this.wellsMap.get(wellName);
         return well ? well.getCurrentLogType() : 'None';
+    }
+
+    /**
+     * Set log type for all wells at once
+     * @param {string} logType
+     */
+    setAllWellsLogType(logType) {
+        let changedCount = 0;
+        for (const well of this.wells) {
+            if (well.logData) {
+                well.setLogType(logType);
+                changedCount++;
+            }
+        }
+        console.log(`Set ${changedCount} wells to log type: ${logType}`);
+        return changedCount;
     }
 
     dispose() {

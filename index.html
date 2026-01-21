@@ -44,10 +44,10 @@
     #crosslineControl { top: 70px; }
     #toggleControl { top: 130px; }
     #toggleFaultControl { top: 190px; }
-    #wellControl { 
-      top: 250px; 
-      max-height: 450px; 
-      overflow-y: auto; 
+    #wellControl {
+      top: 250px;
+      max-height: 450px;
+      overflow-y: auto;
       min-width: 240px;
     }
 
@@ -196,6 +196,9 @@
 <div id="wellControl" class="control-panel">
   <div class="well-panel-header">
     <div>Wells</div>
+    <select id="setAllLogTypeSelect" class="well-log-select" style="min-width: 80px;" title="Set all wells to this log type">
+      <option value="">Set All...</option>
+    </select>
     <button id="toggleAllWellsBtn">Hide All</button>
   </div>
   <div id="wellList" class="well-list">
