@@ -15,7 +15,7 @@ export const WellLogConfig = {
     },
 
     // Display settings
-    maxLogWidth: 20,          // Maximum width of log curve from well center (inside well radius of 10)
+    maxLogWidth: 10,          // Maximum width of log curve from well center (inside well radius of 10)
     tubeRadius: 1,          // Radius of the log curve tube
     curveSegments: 6,       // Smoothness of tube
     nullValue: -999.25,     // Null/missing data value
