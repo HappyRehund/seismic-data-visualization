@@ -3,7 +3,25 @@ export const WellLogConfig = {
     // Available log types with min/max ranges and colors
     logTypes: {
         'None': { min: 0, max: 1, color: 0xffffff, label: 'None' },
-        'GR': { min: 0, max: 150, color: 0x00ff00, label: 'Gamma Ray' },
+        'GR': { 
+            min: 0, 
+            max: 150, 
+            color: 0x00ff00, 
+            label: 'Gamma Ray',
+            // Fill configuration for GR
+            fill: {
+                enabled: true,
+                color: 0xFF7F7F,        // Light green fill color
+                opacity: 0.6,
+                // =====================================================
+                // FILL DIRECTION: 'right' atau 'left'
+                // Ubah value ini untuk mengubah arah fill:
+                // - 'right': Fill dari curve ke kanan (ke arah nilai max)
+                // - 'left':  Fill dari curve ke kiri (ke arah nilai min)
+                // =====================================================
+                direction: 'right'
+            }
+        },
         'RT': { min: 0.1, max: 1000, color: 0xff0000, label: 'Resistivity', logScale: true },
         'RHOB': { min: 1.95, max: 2.95, color: 0x0000ff, label: 'Density' },
         'NPHI': { min: 0.45, max: -0.15, color: 0xff00ff, label: 'Neutron Porosity' },
@@ -23,6 +41,136 @@ export const WellLogConfig = {
 };
 
 /**
+ * WellLogFill Class
+ * Renders a filled area between the log curve and a reference line
+ * Follows OOP best practices with single responsibility
+ */
+export class WellLogFill {
+    /**
+     * @param {WellLog} wellLog - Parent WellLog instance
+     * @param {Array<THREE.Vector3>} curvePoints - Points defining the log curve
+     * @param {Object} fillConfig - Fill configuration from WellLogConfig
+     */
+    constructor(wellLog, curvePoints, fillConfig) {
+        this.wellLog = wellLog;
+        this.curvePoints = curvePoints;
+        this.fillConfig = fillConfig;
+        this.mesh = null;
+        
+        this._create();
+    }
+
+    /**
+     * Create the fill geometry
+     * @private
+     */
+    _create() {
+        if (this.curvePoints.length < 2) return;
+
+        const geometry = this._generateFillGeometry();
+        if (!geometry) return;
+
+        const material = new THREE.MeshBasicMaterial({
+            color: this.fillConfig.color,
+            transparent: true,
+            opacity: this.fillConfig.opacity,
+            side: THREE.DoubleSide,
+            depthWrite: false
+        });
+
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.mesh.renderOrder = 0.5;  // Render between well and curve
+        this.mesh.userData = {
+            type: 'wellLogFill',
+            wellName: this.wellLog.well.name,
+            logType: this.wellLog.logType
+        };
+
+        this.wellLog.well.sceneManager.add(this.mesh);
+    }
+
+    /**
+     * Generate fill geometry between curve and reference edge
+     * @private
+     * @returns {THREE.BufferGeometry|null}
+     */
+    _generateFillGeometry() {
+        const vertices = [];
+        const indices = [];
+        
+        const wellX = this.wellLog.well.mesh.position.x;
+        const wellZ = this.wellLog.well.mesh.position.z;
+        
+        // =====================================================
+        // FILL DIRECTION LOGIC:
+        // 'right': referenceX = wellX + maxLogWidth (batas kanan)
+        // 'left':  referenceX = wellX - maxLogWidth (batas kiri)
+        // =====================================================
+        const direction = this.fillConfig.direction || 'right';
+        const referenceX = direction === 'right' 
+            ? wellX + WellLogConfig.maxLogWidth   // Fill ke kanan
+            : wellX - WellLogConfig.maxLogWidth;  // Fill ke kiri
+
+        // Build vertices: for each curve point, add curve point and reference point
+        for (let i = 0; i < this.curvePoints.length; i++) {
+            const curvePoint = this.curvePoints[i];
+            
+            // Curve vertex
+            vertices.push(curvePoint.x, curvePoint.y, curvePoint.z);
+            
+            // Reference edge vertex (same Y and Z, different X)
+            vertices.push(referenceX, curvePoint.y, wellZ);
+        }
+
+        // Build triangle indices
+        // Each segment between two curve points creates 2 triangles (a quad)
+        for (let i = 0; i < this.curvePoints.length - 1; i++) {
+            const curveIdx1 = i * 2;       // Current curve point
+            const refIdx1 = i * 2 + 1;     // Current reference point
+            const curveIdx2 = (i + 1) * 2; // Next curve point
+            const refIdx2 = (i + 1) * 2 + 1; // Next reference point
+
+            // Triangle 1: curveIdx1 -> refIdx1 -> curveIdx2
+            indices.push(curveIdx1, refIdx1, curveIdx2);
+            
+            // Triangle 2: curveIdx2 -> refIdx1 -> refIdx2
+            indices.push(curveIdx2, refIdx1, refIdx2);
+        }
+
+        if (vertices.length === 0) return null;
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.setIndex(indices);
+        geometry.computeVertexNormals();
+
+        return geometry;
+    }
+
+    /**
+     * Set visibility of fill mesh
+     * @param {boolean} visible
+     */
+    setVisible(visible) {
+        if (this.mesh) {
+            this.mesh.visible = visible;
+        }
+    }
+
+    /**
+     * Dispose fill mesh and free resources
+     */
+    dispose() {
+        if (this.mesh) {
+            this.wellLog.well.sceneManager.remove(this.mesh);
+            this.mesh.geometry.dispose();
+            this.mesh.material.dispose();
+            this.mesh = null;
+        }
+    }
+}
+
+/**
  * WellLog Class
  * Renders a well log curve as a 3D tube geometry along the well bore
  */
@@ -32,6 +180,7 @@ export class WellLog {
         this.logData = logData;         // Array of {depth, value} for this log
         this.logType = logType;
         this.mesh = null;
+        this.fill = null;               // WellLogFill instance for filled area
         this.config = WellLogConfig.logTypes[logType] || WellLogConfig.logTypes['GR'];
 
         if (logType !== 'None' && logData && logData.length > 0) {
@@ -75,6 +224,21 @@ export class WellLog {
         };
 
         this.well.sceneManager.add(this.mesh);
+
+        // Create fill if configured for this log type
+        this._createFill(points);
+    }
+
+    /**
+     * Create fill visualization if enabled for this log type
+     * @private
+     * @param {Array<THREE.Vector3>} curvePoints - Points defining the log curve
+     */
+    _createFill(curvePoints) {
+        // Check if fill is enabled for this log type
+        if (this.config.fill && this.config.fill.enabled) {
+            this.fill = new WellLogFill(this, curvePoints, this.config.fill);
+        }
     }
 
     _generateCurvePoints() {
@@ -168,9 +332,19 @@ export class WellLog {
         if (this.mesh) {
             this.mesh.visible = visible;
         }
+        // Also update fill visibility
+        if (this.fill) {
+            this.fill.setVisible(visible);
+        }
     }
 
     dispose() {
+        // Dispose fill first
+        if (this.fill) {
+            this.fill.dispose();
+            this.fill = null;
+        }
+        
         if (this.mesh) {
             this.well.sceneManager.remove(this.mesh);
             this.mesh.geometry.dispose();
