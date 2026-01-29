@@ -1,6 +1,5 @@
 import { SeismicConfig, StyleConfig } from '../config/SeismicConfig.js';
 import { WellLog } from './WellLog.js';
-import { WellLogConfig } from '../config/WellLogConfig.js';
 export class Well {
     constructor(sceneManager, name, inline, crossline, timeStart, timeEnd,
                 radius = StyleConfig.wellRadius, color = StyleConfig.defaultWellColor) {

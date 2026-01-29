@@ -3,10 +3,10 @@ export const WellLogConfig = {
     // Available log types with min/max ranges and colors
     logTypes: {
         'None': { min: 0, max: 1, color: 0xffffff, label: 'None' },
-        'GR': { 
-            min: 0, 
-            max: 150, 
-            color: 0x00ff00, 
+        'GR': {
+            min: 0,
+            max: 150,
+            color: 0x00ff00,
             label: 'Gamma Ray',
             // Fill configuration for GR
             fill: {
@@ -56,7 +56,7 @@ export class WellLogFill {
         this.curvePoints = curvePoints;
         this.fillConfig = fillConfig;
         this.mesh = null;
-        
+
         this._create();
     }
 
@@ -97,27 +97,27 @@ export class WellLogFill {
     _generateFillGeometry() {
         const vertices = [];
         const indices = [];
-        
+
         const wellX = this.wellLog.well.mesh.position.x;
         const wellZ = this.wellLog.well.mesh.position.z;
-        
+
         // =====================================================
         // FILL DIRECTION LOGIC:
         // 'right': referenceX = wellX + maxLogWidth (batas kanan)
         // 'left':  referenceX = wellX - maxLogWidth (batas kiri)
         // =====================================================
         const direction = this.fillConfig.direction || 'right';
-        const referenceX = direction === 'right' 
+        const referenceX = direction === 'right'
             ? wellX + WellLogConfig.maxLogWidth   // Fill ke kanan
             : wellX - WellLogConfig.maxLogWidth;  // Fill ke kiri
 
         // Build vertices: for each curve point, add curve point and reference point
         for (let i = 0; i < this.curvePoints.length; i++) {
             const curvePoint = this.curvePoints[i];
-            
+
             // Curve vertex
             vertices.push(curvePoint.x, curvePoint.y, curvePoint.z);
-            
+
             // Reference edge vertex (same Y and Z, different X)
             vertices.push(referenceX, curvePoint.y, wellZ);
         }
@@ -132,7 +132,7 @@ export class WellLogFill {
 
             // Triangle 1: curveIdx1 -> refIdx1 -> curveIdx2
             indices.push(curveIdx1, refIdx1, curveIdx2);
-            
+
             // Triangle 2: curveIdx2 -> refIdx1 -> refIdx2
             indices.push(curveIdx2, refIdx1, refIdx2);
         }
@@ -344,7 +344,7 @@ export class WellLog {
             this.fill.dispose();
             this.fill = null;
         }
-        
+
         if (this.mesh) {
             this.well.sceneManager.remove(this.mesh);
             this.mesh.geometry.dispose();

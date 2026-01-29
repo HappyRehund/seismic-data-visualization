@@ -2,10 +2,10 @@ export const WellLogConfig = {
     // Available log types with min/max ranges and colors
     logTypes: {
         'None': { min: 0, max: 1, color: 0xffffff, label: 'None' },
-        'GR': { 
-            min: 0, 
-            max: 150, 
-            color: 0x00ff00, 
+        'GR': {
+            min: 0,
+            max: 150,
+            color: 0x00ff00,
             label: 'Gamma Ray',
             // Fill configuration for GR
             fill: {
