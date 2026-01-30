@@ -159,16 +159,18 @@ export class SceneManager {
     _handlePan(deltaX, deltaY) {
         const panSpeed = CameraConfig.panSpeed;
         
-        // Calculate camera right and up vectors for proper panning direction
-        const { theta, phi } = this.orbitState;
+        // Calculate camera right vector based on current theta
+        // Right vector is perpendicular to view direction in XZ plane
+        const { theta } = this.orbitState;
         
-        // Right vector (perpendicular to view direction in XZ plane)
-        const rightX = Math.sin(theta + Math.PI / 2);
-        const rightZ = Math.cos(theta + Math.PI / 2);
+        // Camera looks toward center, so right vector is:
+        // cross(viewDirection, upVector) = (-sin(theta), 0, cos(theta))
+        const rightX = -Math.sin(theta);
+        const rightZ = Math.cos(theta);
         
-        // Pan horizontally (left/right)
-        this.orbitState.targetOffset.x -= deltaX * panSpeed * rightX;
-        this.orbitState.targetOffset.z -= deltaX * panSpeed * rightZ;
+        // Pan horizontally (left/right) along camera's right vector
+        this.orbitState.targetOffset.x += deltaX * panSpeed * rightX;
+        this.orbitState.targetOffset.z += deltaX * panSpeed * rightZ;
         
         // Pan vertically (up/down)
         this.orbitState.targetOffset.y += deltaY * panSpeed;
