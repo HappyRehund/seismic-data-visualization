@@ -359,6 +359,19 @@ export class UIManager {
         }
     }
 
+    /**
+     * Create camera reset button
+     * @param {SceneManager} sceneManager
+     */
+    createCameraReset(sceneManager) {
+        const resetBtn = document.getElementById('resetCameraBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                sceneManager.resetCamera();
+            });
+        }
+    }
+
     getControl(name) {
         return this.controls[name];
     }

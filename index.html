@@ -44,16 +44,18 @@
     #crosslineControl { top: 70px; }
     #toggleControl { top: 130px; }
     #toggleFaultControl { top: 190px; }
+    #cameraControl { top: 250px; }
     #wellControl {
-      top: 250px;
-      max-height: 450px;
+      top: 350px;
+      max-height: 400px;
       overflow-y: auto;
       min-width: 240px;
     }
 
     #toggleHorizonBtn,
     #toggleFaultBtn,
-    #toggleAllWellsBtn {
+    #toggleAllWellsBtn,
+    #resetCameraBtn {
       padding: 8px 16px;
       cursor: pointer;
       border: none;
@@ -65,7 +67,8 @@
 
     #toggleHorizonBtn:hover,
     #toggleFaultBtn:hover,
-    #toggleAllWellsBtn:hover {
+    #toggleAllWellsBtn:hover,
+    #resetCameraBtn:hover {
       background: #357abd;
     }
 
@@ -191,6 +194,15 @@
 
 <div id="toggleFaultControl" class="control-panel">
   <button id="toggleFaultBtn">Hide Fault</button>
+</div>
+
+<div id="cameraControl" class="control-panel">
+  <button id="resetCameraBtn" title="Reset camera to initial position">Reset Camera</button>
+  <div style="font-size: 11px; color: #666; margin-top: 6px;">
+    <div>🖱️ Drag: Rotate</div>
+    <div>⇧+Drag: Pan</div>
+    <div>Scroll: Zoom</div>
+  </div>
 </div>
 
 <div id="wellControl" class="control-panel">

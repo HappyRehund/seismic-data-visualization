@@ -41,7 +41,9 @@ export const CameraConfig = {
     minRadius: 500,
     maxRadius: 10000,
 
-    rotationSpeed: 0.005
+    rotationSpeed: 0.005,
+    panSpeed: 2.0,          // Speed for panning (shift + drag)
+    zoomSpeed: 1.5          // Zoom smoothness multiplier
 };
 
 export const StyleConfig = {

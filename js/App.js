@@ -101,6 +101,9 @@ class SeismicViewerApp {
 
         // Connect well panel to well loader
         this.uiManager.createWellPanel(this.wellLoader);
+
+        // Connect reset camera button
+        this.uiManager.createCameraReset(this.sceneManager);
     }
 
     async _loadData() {
