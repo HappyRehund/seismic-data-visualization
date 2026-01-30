@@ -5,23 +5,220 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>3D Seismic & Horizon Viewer</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       overflow: hidden;
       background: #111;
+      font-family: 'Segoe UI', Arial, sans-serif;
     }
 
-    /* Control panel styling */
-    .control-panel {
+    /* ========================================
+       LOADING SCREEN
+    ======================================== */
+    #loadingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease-out;
+    }
+
+    #loadingScreen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-logo {
+      font-size: 32px;
+      font-weight: bold;
+      color: #e94560;
+      margin-bottom: 40px;
+      text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+    }
+
+    .loading-container {
+      width: 400px;
+      max-width: 90%;
+    }
+
+    .loading-progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .loading-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #e94560, #0f3460);
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 3px;
+    }
+
+    .loading-status {
+      color: #a0a0a0;
+      font-size: 14px;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    .loading-tasks {
+      margin-top: 30px;
+      width: 100%;
+    }
+
+    .loading-task {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      color: #666;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .loading-task.active {
+      color: #fff;
+    }
+
+    .loading-task.complete {
+      color: #4ade80;
+    }
+
+    .loading-task.error {
+      color: #f87171;
+    }
+
+    .loading-task.skipped {
+      color: #fbbf24;
+    }
+
+    .task-icon {
+      width: 20px;
+      text-align: center;
+    }
+
+    .task-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #e94560;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-data-source {
+      margin-top: 20px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      color: #888;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .loading-data-source span {
+      color: #4ade80;
+      font-weight: 500;
+    }
+
+    /* ========================================
+       CONTROL PANELS - LEFT SIDEBAR
+    ======================================== */
+    .sidebar {
       position: absolute;
       left: 10px;
-      background: rgba(255, 255, 255, 0.9);
+      top: 10px;
+      bottom: 10px;
+      width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    .control-panel {
+      background: rgba(255, 255, 255, 0.95);
       padding: 12px 16px;
       border-radius: 8px;
-      z-index: 10;
-      font-family: Arial, sans-serif;
       font-size: 14px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+    }
+
+    .control-panel.collapsible .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 0;
+      transition: margin-bottom 0.2s;
+    }
+
+    .control-panel.collapsible.expanded .panel-header {
+      margin-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    .control-panel.collapsible .panel-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .control-panel.collapsible.expanded .panel-content {
+      max-height: 500px;
+    }
+
+    .panel-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .panel-toggle {
+      font-size: 10px;
+      color: #888;
+      transition: transform 0.2s;
+    }
+
+    .control-panel.collapsible.expanded .panel-toggle {
+      transform: rotate(180deg);
     }
 
     .control-panel label {
@@ -31,67 +228,98 @@
     }
 
     .control-panel input[type="range"] {
-      width: 150px;
+      width: 130px;
+      accent-color: #4a90d9;
     }
 
     .control-panel .value-label {
-      min-width: 40px;
+      min-width: 35px;
       text-align: right;
       font-weight: bold;
+      font-size: 13px;
     }
 
-    #inlineControl { top: 10px; }
-    #crosslineControl { top: 70px; }
-    #toggleControl { top: 130px; }
-    #toggleFaultControl { top: 190px; }
-    #cameraControl { top: 250px; }
+    /* Wells panel - expandable */
     #wellControl {
-      top: 350px;
-      max-height: 400px;
-      overflow-y: auto;
-      min-width: 240px;
+      flex: 1;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
     }
 
-    #toggleHorizonBtn,
-    #toggleFaultBtn,
-    #toggleAllWellsBtn,
-    #resetCameraBtn {
-      padding: 8px 16px;
+    #wellControl .panel-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #wellControl.expanded .panel-content {
+      max-height: none;
+    }
+
+    /* Button styles */
+    .btn {
+      padding: 8px 14px;
       cursor: pointer;
       border: none;
       border-radius: 4px;
       background: #4a90d9;
       color: white;
-      font-size: 14px;
+      font-size: 13px;
+      transition: background 0.2s, transform 0.1s;
     }
 
-    #toggleHorizonBtn:hover,
-    #toggleFaultBtn:hover,
-    #toggleAllWellsBtn:hover,
-    #resetCameraBtn:hover {
+    .btn:hover {
       background: #357abd;
     }
 
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Well panel header */
     .well-panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
-      padding-bottom: 8px;
-      gap: 10px;
-      border-bottom: 1px solid #ddd;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .well-panel-header div {
       font-weight: bold;
     }
 
+    /* Well list */
     .well-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      max-height: 350px;
+      gap: 4px;
+      flex: 1;
       overflow-y: auto;
+      margin-top: 8px;
+      max-height: 300px;
+    }
+
+    .well-list::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .well-list::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
     }
 
     .well-item {
@@ -109,18 +337,21 @@
     .well-name {
       flex: 1;
       font-weight: 500;
-      min-width: 80px;
-      font-size: 13px;
+      min-width: 60px;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .well-log-select {
-      padding: 4px 8px;
+      padding: 4px 6px;
       border: 1px solid #ccc;
       border-radius: 4px;
-      font-size: 12px;
+      font-size: 11px;
       background: white;
       cursor: pointer;
-      min-width: 70px;
+      min-width: 60px;
     }
 
     .well-log-select:hover {
@@ -134,21 +365,18 @@
     }
 
     .well-checkbox {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       cursor: pointer;
       accent-color: #4a90d9;
     }
 
-    .well-item input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-    }
-
-    .well-item label {
-      cursor: pointer;
-      user-select: none;
+    /* Camera controls info */
+    .camera-info {
+      font-size: 11px;
+      color: #666;
+      margin-top: 8px;
+      line-height: 1.6;
     }
 
     /* Well tooltip */
@@ -158,7 +386,6 @@
       color: white;
       padding: 8px 12px;
       border-radius: 4px;
-      font-family: Arial, sans-serif;
       font-size: 14px;
       font-weight: bold;
       pointer-events: none;
@@ -167,67 +394,116 @@
       white-space: nowrap;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
+
+    /* Data source indicator */
+    #dataSourceIndicator {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #888;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      z-index: 10;
+    }
+
+    #dataSourceIndicator .source-name {
+      color: #4ade80;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
 
-<!-- UI Controls -->
-<div id="inlineControl" class="control-panel">
-  <label>
-    Inline:
-    <input type="range" id="inlineSlider" min="0" max="1091" value="0" />
-    <span id="label_inline" class="value-label">0</span>
-  </label>
-</div>
-
-<div id="crosslineControl" class="control-panel">
-  <label>
-    Crossline:
-    <input type="range" id="crosslineSlider" min="0" max="548" value="0" />
-    <span id="label_crossline" class="value-label">0</span>
-  </label>
-</div>
-
-<div id="toggleControl" class="control-panel">
-  <button id="toggleHorizonBtn">Hide Horizon</button>
-</div>
-
-<div id="toggleFaultControl" class="control-panel">
-  <button id="toggleFaultBtn">Hide Fault</button>
-</div>
-
-<div id="cameraControl" class="control-panel">
-  <button id="resetCameraBtn" title="Reset camera to initial position">Reset Camera</button>
-  <div style="font-size: 11px; color: #666; margin-top: 6px;">
-    <div>🖱️ Drag: Rotate</div>
-    <div>⇧+Drag: Pan</div>
-    <div>Scroll: Zoom</div>
+<!-- Loading Screen -->
+<div id="loadingScreen">
+  <div class="loading-logo">🌍 Seismic Viewer</div>
+  <div class="loading-container">
+    <div class="loading-progress-bar">
+      <div id="loadingProgressFill" class="loading-progress-fill"></div>
+    </div>
+    <div id="loadingStatus" class="loading-status">Initializing...</div>
+    <div id="loadingTasks" class="loading-tasks">
+      <!-- Tasks will be dynamically added -->
+    </div>
+    <div id="loadingDataSource" class="loading-data-source">
+      Data Source: <span id="dataSourceName">Detecting...</span>
+    </div>
   </div>
 </div>
 
-<div id="wellControl" class="control-panel">
-  <div class="well-panel-header">
-    <div>Wells</div>
-    <select id="setAllLogTypeSelect" class="well-log-select" style="min-width: 80px;" title="Set all wells to this log type">
-      <option value="">Set All...</option>
-    </select>
-    <button id="toggleAllWellsBtn">Hide All</button>
+<!-- Left Sidebar Controls -->
+<div class="sidebar" id="controlSidebar">
+  
+  <!-- Seismic Sliders -->
+  <div class="control-panel">
+    <label>
+      Inline:
+      <input type="range" id="inlineSlider" min="0" max="1091" value="0" />
+      <span id="label_inline" class="value-label">0</span>
+    </label>
   </div>
-  <div id="wellList" class="well-list">
-    <!-- Well checkboxes will be dynamically added here -->
-    <div style="color: #888; font-style: italic;">Loading wells...</div>
+
+  <div class="control-panel">
+    <label>
+      Crossline:
+      <input type="range" id="crosslineSlider" min="0" max="548" value="0" />
+      <span id="label_crossline" class="value-label">0</span>
+    </label>
   </div>
+
+  <!-- Visibility Toggles -->
+  <div class="control-panel">
+    <div class="btn-group">
+      <button id="toggleHorizonBtn" class="btn btn-small">Hide Horizon</button>
+      <button id="toggleFaultBtn" class="btn btn-small">Hide Fault</button>
+    </div>
+  </div>
+
+  <!-- Camera Controls -->
+  <div class="control-panel">
+    <button id="resetCameraBtn" class="btn" title="Reset camera to initial position">Reset Camera</button>
+    <div class="camera-info">
+      🖱️ Drag: Rotate<br>
+      ⇧+Drag: Pan<br>
+      Scroll: Zoom
+    </div>
+  </div>
+
+  <!-- Wells Panel -->
+  <div id="wellControl" class="control-panel collapsible expanded">
+    <div class="panel-header" onclick="this.parentElement.classList.toggle('expanded')">
+      <span class="panel-title">Wells</span>
+      <span class="panel-toggle">▼</span>
+    </div>
+    <div class="panel-content">
+      <div class="well-panel-header">
+        <select id="setAllLogTypeSelect" class="well-log-select" title="Set all wells to this log type">
+          <option value="">Set All...</option>
+        </select>
+        <button id="toggleAllWellsBtn" class="btn btn-small">Hide All</button>
+      </div>
+      <div id="wellList" class="well-list">
+        <div style="color: #888; font-style: italic; padding: 10px 0;">Loading wells...</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Well Tooltip -->
 <div id="wellTooltip"></div>
 
+<!-- Data Source Indicator -->
+<div id="dataSourceIndicator" style="display: none;">
+  Source: <span class="source-name" id="currentDataSource">CSV</span>
+</div>
+
 <!-- Three.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
 
-<!--
-  Main Application Entry Point
--->
+<!-- Main Application Entry Point -->
 <script type="module" src="/js/App.js"></script>
 
 </body>
