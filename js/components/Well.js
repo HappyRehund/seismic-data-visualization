@@ -1,5 +1,148 @@
 import { SeismicConfig, StyleConfig } from '../config/SeismicConfig.js';
 import { WellLog } from './WellLog.js';
+
+/**
+ * WellLabel Class
+ * Renders a text label above the well using a sprite
+ * Follows OOP best practices with single responsibility
+ */
+export class WellLabel {
+    /**
+     * @param {Well} well - Parent Well instance
+     * @param {string} text - Label text to display
+     */
+    constructor(well, text) {
+        this.well = well;
+        this.text = text;
+        this.sprite = null;
+
+        this._create();
+    }
+
+    /**
+     * Create the text sprite
+     * @private
+     */
+    _create() {
+        // Create canvas for text rendering
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        // Configure canvas size
+        const fontSize = 48;
+        const padding = 20;
+        context.font = `bold ${fontSize}px Arial`;
+        const textMetrics = context.measureText(this.text);
+        
+        canvas.width = textMetrics.width + padding * 2;
+        canvas.height = fontSize + padding * 2;
+
+        // Draw background (semi-transparent dark)
+        context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this._roundRect(context, 0, 0, canvas.width, canvas.height, 8);
+        context.fill();
+
+        // Draw text
+        context.font = `bold ${fontSize}px Arial`;
+        context.fillStyle = '#ffffff';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(this.text, canvas.width / 2, canvas.height / 2);
+
+        // Create texture from canvas
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+
+        // Create sprite material
+        const material = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            depthTest: false,      // Always render on top
+            depthWrite: false
+        });
+
+        // Create sprite
+        this.sprite = new THREE.Sprite(material);
+
+        // Calculate scale based on canvas aspect ratio
+        const aspectRatio = canvas.width / canvas.height;
+        const labelHeight = 15;  // Height in world units
+        this.sprite.scale.set(labelHeight * aspectRatio, labelHeight, 1);
+
+        // Position above the well
+        this._updatePosition();
+
+        // Set render order to ensure it's on top
+        this.sprite.renderOrder = 100;
+
+        this.sprite.userData = {
+            type: 'wellLabel',
+            wellName: this.well.name
+        };
+
+        this.well.sceneManager.add(this.sprite);
+    }
+
+    /**
+     * Draw rounded rectangle on canvas
+     * @private
+     */
+    _roundRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+    }
+
+    /**
+     * Update label position to be above well
+     * @private
+     */
+    _updatePosition() {
+        if (!this.sprite || !this.well.mesh) return;
+
+        const wellMesh = this.well.mesh;
+        const wellHeight = wellMesh.geometry.parameters.height;
+        const wellTopY = wellMesh.position.y + wellHeight / 2;
+
+        // Position label above the well top
+        this.sprite.position.set(
+            wellMesh.position.x,
+            wellTopY + 20,  // Offset above well
+            wellMesh.position.z
+        );
+    }
+
+    /**
+     * Set visibility of the label
+     * @param {boolean} visible
+     */
+    setVisible(visible) {
+        if (this.sprite) {
+            this.sprite.visible = visible;
+        }
+    }
+
+    /**
+     * Dispose the label and free resources
+     */
+    dispose() {
+        if (this.sprite) {
+            this.well.sceneManager.remove(this.sprite);
+            this.sprite.material.map.dispose();
+            this.sprite.material.dispose();
+            this.sprite = null;
+        }
+    }
+}
+
 export class Well {
     constructor(sceneManager, name, inline, crossline, timeStart, timeEnd,
                 radius = StyleConfig.wellRadius, color = StyleConfig.defaultWellColor) {
@@ -14,7 +157,19 @@ export class Well {
         this.currentLogType = 'None';  // Currently displayed log type
         this.wellLog = null;           // Current WellLog visualization
 
+        // Well label
+        this.label = null;             // WellLabel instance
+
         this._create(inline, crossline, timeStart, timeEnd, radius, color);
+        this._createLabel();
+    }
+
+    /**
+     * Create the well name label
+     * @private
+     */
+    _createLabel() {
+        this.label = new WellLabel(this, this.name);
     }
 
     _create(inline, crossline, timeStart, timeEnd, radius, color) {
@@ -67,6 +222,7 @@ export class Well {
     setVisible(visible) {
         if (this.mesh) this.mesh.visible = visible;
         if (this.wellLog) this.wellLog.setVisible(visible);
+        if (this.label) this.label.setVisible(visible);
     }
 
     highlight() {
@@ -139,6 +295,12 @@ export class Well {
     }
 
     dispose() {
+        // Dispose label
+        if (this.label) {
+            this.label.dispose();
+            this.label = null;
+        }
+
         if (this.wellLog) {
             this.wellLog.dispose();
             this.wellLog = null;
