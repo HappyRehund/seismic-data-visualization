@@ -217,12 +217,6 @@ export class FaultLoader {
         this.faults.forEach(f => f.setVisible(visible));
     }
 
-    toggleAll() {
-        const newState = this.faults.length > 0 ? !this.faults[0].line?.visible ?? !this.faults[0].mesh?.visible : true;
-        this.setAllVisible(newState);
-        return newState;
-    }
-
     dispose() {
         this.faults.forEach(f => f.dispose());
         this.faults = [];

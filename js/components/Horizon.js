@@ -148,10 +148,6 @@ export class Horizon {
         }
     }
 
-    isVisible() {
-        return this.visible;
-    }
-
 
     dispose() {
         if (this.pointCloud) {
@@ -175,12 +171,6 @@ export class HorizonManager {
         await horizon.load(csvUrl, zColumnName);
         this.horizons.push(horizon);
         return horizon;
-    }
-
-    toggleAll() {
-        const newState = this.horizons.length > 0 ? !this.horizons[0].isVisible() : true;
-        this.horizons.forEach(h => h.setVisible(newState));
-        return newState;
     }
 
     setAllVisible(visible) {

@@ -169,24 +169,5 @@ export const FaultFileConfig = {
         });
 
         return allFiles;
-    },
-
-    /**
-     * Get fault files by type
-     * @param {string} type - 'thrustFault' | 'normalFault' | 'transpressional' | 'reverseFault'
-     * @returns {string[]}
-     */
-    getFaultFilesByType(type) {
-        const files = this.faultsByType[type] || [];
-        return files.map(file => this.basePath + file);
-    },
-
-    /**
-     * Get fault count
-     * @returns {number}
-     */
-    getTotalFaultCount() {
-        return Object.values(this.faultsByType)
-            .reduce((sum, files) => sum + files.length, 0);
     }
 };

@@ -440,21 +440,6 @@ export class WellLoader {
         this.wells.forEach(w => w.setVisible(visible));
     }
 
-    toggleWell(name) {
-        const well = this.wellsMap.get(name);
-        if (well) {
-            const newState = !well.mesh?.visible;
-            well.setVisible(newState);
-            return newState;
-        }
-        return false;
-    }
-
-    isWellVisible(name) {
-        const well = this.wellsMap.get(name);
-        return well?.mesh?.visible ?? false;
-    }
-
     /**
      * Attach log data to wells
      * @param {WellLogLoader} wellLogLoader

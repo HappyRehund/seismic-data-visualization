@@ -243,22 +243,6 @@ export class SceneManager {
         render();
     }
 
-    /**
-     * Get renderer info for debugging performance
-     * @returns {Object} Renderer info including draw calls, triangles, etc.
-     */
-    getRendererInfo() {
-        const info = this.renderer.info;
-        return {
-            drawCalls: info.render.calls,
-            triangles: info.render.triangles,
-            points: info.render.points,
-            lines: info.render.lines,
-            geometries: info.memory.geometries,
-            textures: info.memory.textures
-        };
-    }
-
     _setupMouseInteraction() {
         this.tooltip = document.getElementById('wellTooltip');
         

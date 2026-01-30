@@ -479,12 +479,4 @@ export class WellLogLoader {
     hasLogsForWell(wellName) {
         return this.wellLogs.has(wellName);
     }
-
-    /**
-     * Get all well names in the log data
-     * @returns {string[]}
-     */
-    getWellNames() {
-        return [...this.wellLogs.keys()];
-    }
 }

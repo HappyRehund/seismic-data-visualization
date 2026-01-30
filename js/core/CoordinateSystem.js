@@ -36,13 +36,4 @@ export class CoordinateSystem {
             z: SeismicConfig.imageWidth / 2
         };
     }
-
-    static getCameraTarget() {
-        const center = this.getBoundingBoxCenter();
-        return {
-            x: center.x,
-            y: center.y - SeismicConfig.depthStep,
-            z: center.z
-        };
-    }
 }

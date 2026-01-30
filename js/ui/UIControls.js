@@ -72,11 +72,6 @@ export class ToggleButton {
     _updateText() {
         this.button.textContent = this.isActive ? this.hideText : this.showText;
     }
-
-    setState(active) {
-        this.isActive = active;
-        this._updateText();
-    }
 }
 
 export class WellTogglePanel {

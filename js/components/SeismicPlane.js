@@ -45,10 +45,6 @@ class SeismicPlaneBase {
         this._loadTexture();
     }
 
-    getIndex() {
-        return this.currentIndex;
-    }
-
     // Abstract methods - to be implemented by subclasses
     _updatePosition() { throw new Error('Must implement _updatePosition'); }
     _loadTexture() { throw new Error('Must implement _loadTexture'); }
