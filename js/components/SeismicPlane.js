@@ -46,9 +46,17 @@ class SeismicPlaneBase {
     }
 
     // Abstract methods - to be implemented by subclasses
-    _updatePosition() { throw new Error('Must implement _updatePosition'); }
-    _loadTexture() { throw new Error('Must implement _loadTexture'); }
-    _getImagePath(index) { throw new Error('Must implement _getImagePath'); }
+    _updatePosition() {
+        throw new Error('Must implement _updatePosition');
+    }
+
+    _loadTexture() {
+        throw new Error('Must implement _loadTexture');
+    }
+
+    _getImagePath(index) {
+        throw new Error('Must implement _getImagePath');
+    }
 }
 
 export class InlinePlane extends SeismicPlaneBase {

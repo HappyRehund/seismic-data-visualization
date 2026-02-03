@@ -1,17 +1,5 @@
-
 import { WellLogConfig } from '../config/WellLogConfig.js';
-
-/**
- * WellLogFill Class
- * Renders a filled area between the log curve and a reference line
- * Follows OOP best practices with single responsibility
- */
 export class WellLogFill {
-    /**
-     * @param {WellLog} wellLog - Parent WellLog instance
-     * @param {Array<THREE.Vector3>} curvePoints - Points defining the log curve
-     * @param {Object} fillConfig - Fill configuration from WellLogConfig
-     */
     constructor(wellLog, curvePoints, fillConfig) {
         this.wellLog = wellLog;
         this.curvePoints = curvePoints;
@@ -21,10 +9,6 @@ export class WellLogFill {
         this._create();
     }
 
-    /**
-     * Create the fill geometry
-     * @private
-     */
     _create() {
         if (this.curvePoints.length < 2) return;
 
@@ -40,7 +24,7 @@ export class WellLogFill {
         });
 
         this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.renderOrder = 0.5;  // Render between well and curve
+        this.mesh.renderOrder = 0.5;
         this.mesh.userData = {
             type: 'wellLogFill',
             wellName: this.wellLog.well.name,
@@ -50,11 +34,6 @@ export class WellLogFill {
         this.wellLog.well.sceneManager.add(this.mesh);
     }
 
-    /**
-     * Generate fill geometry between curve and reference edge
-     * @private
-     * @returns {THREE.BufferGeometry|null}
-     */
     _generateFillGeometry() {
         const vertices = [];
         const indices = [];
@@ -62,39 +41,27 @@ export class WellLogFill {
         const wellX = this.wellLog.well.mesh.position.x;
         const wellZ = this.wellLog.well.mesh.position.z;
 
-        // =====================================================
-        // FILL DIRECTION LOGIC:
-        // 'right': referenceX = wellX + maxLogWidth (batas kanan)
-        // 'left':  referenceX = wellX - maxLogWidth (batas kiri)
-        // =====================================================
         const direction = this.fillConfig.direction || 'right';
         const referenceX = direction === 'right'
-            ? wellX + WellLogConfig.maxLogWidth   // Fill ke kanan
-            : wellX - WellLogConfig.maxLogWidth;  // Fill ke kiri
+            ? wellX + WellLogConfig.maxLogWidth
+            : wellX - WellLogConfig.maxLogWidth;
 
-        // Build vertices: for each curve point, add curve point and reference point
         for (let i = 0; i < this.curvePoints.length; i++) {
             const curvePoint = this.curvePoints[i];
 
-            // Curve vertex
             vertices.push(curvePoint.x, curvePoint.y, curvePoint.z);
 
-            // Reference edge vertex (same Y and Z, different X)
             vertices.push(referenceX, curvePoint.y, wellZ);
         }
 
-        // Build triangle indices
-        // Each segment between two curve points creates 2 triangles (a quad)
         for (let i = 0; i < this.curvePoints.length - 1; i++) {
             const curveIdx1 = i * 2;       // Current curve point
             const refIdx1 = i * 2 + 1;     // Current reference point
             const curveIdx2 = (i + 1) * 2; // Next curve point
             const refIdx2 = (i + 1) * 2 + 1; // Next reference point
 
-            // Triangle 1: curveIdx1 -> refIdx1 -> curveIdx2
             indices.push(curveIdx1, refIdx1, curveIdx2);
 
-            // Triangle 2: curveIdx2 -> refIdx1 -> refIdx2
             indices.push(curveIdx2, refIdx1, refIdx2);
         }
 
@@ -108,19 +75,12 @@ export class WellLogFill {
         return geometry;
     }
 
-    /**
-     * Set visibility of fill mesh
-     * @param {boolean} visible
-     */
     setVisible(visible) {
         if (this.mesh) {
             this.mesh.visible = visible;
         }
     }
 
-    /**
-     * Dispose fill mesh and free resources
-     */
     dispose() {
         if (this.mesh) {
             this.wellLog.well.sceneManager.remove(this.mesh);
@@ -131,17 +91,13 @@ export class WellLogFill {
     }
 }
 
-/**
- * WellLog Class
- * Renders a well log curve as a 3D tube geometry along the well bore
- */
 export class WellLog {
     constructor(well, logData, logType = 'GR') {
         this.well = well;
-        this.logData = logData;         // Array of {depth, value} for this log
+        this.logData = logData;
         this.logType = logType;
         this.mesh = null;
-        this.fill = null;               // WellLogFill instance for filled area
+        this.fill = null;
         this.config = WellLogConfig.logTypes[logType] || WellLogConfig.logTypes['GR'];
 
         if (logType !== 'None' && logData && logData.length > 0) {
@@ -157,16 +113,14 @@ export class WellLog {
             return;
         }
 
-        // Create a smooth curve through the points
         const curve = new THREE.CatmullRomCurve3(points);
 
-        // Create tube geometry along the curve
         const geometry = new THREE.TubeGeometry(
             curve,
-            Math.max(points.length * 2, 50),  // tubular segments
+            Math.max(points.length * 2, 50),
             WellLogConfig.tubeRadius,
             WellLogConfig.curveSegments,
-            false  // not closed
+            false
         );
 
         const material = new THREE.MeshPhongMaterial({
@@ -177,7 +131,7 @@ export class WellLog {
         });
 
         this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.renderOrder = 1;  // Render log after well so it appears on top
+        this.mesh.renderOrder = 1;
         this.mesh.userData = {
             type: 'wellLog',
             wellName: this.well.name,
@@ -186,17 +140,10 @@ export class WellLog {
 
         this.well.sceneManager.add(this.mesh);
 
-        // Create fill if configured for this log type
         this._createFill(points);
     }
 
-    /**
-     * Create fill visualization if enabled for this log type
-     * @private
-     * @param {Array<THREE.Vector3>} curvePoints - Points defining the log curve
-     */
     _createFill(curvePoints) {
-        // Check if fill is enabled for this log type
         if (this.config.fill && this.config.fill.enabled) {
             this.fill = new WellLogFill(this, curvePoints, this.config.fill);
         }
@@ -206,23 +153,19 @@ export class WellLog {
         const points = [];
         const wellPos = this.well.mesh.position;
 
-        // Get well X and Z position
         const wellX = wellPos.x;
         const wellZ = wellPos.z;
 
-        // Get well's Y range for proper alignment
         const wellMesh = this.well.mesh;
         const wellHeight = wellMesh.geometry.parameters.height;
         const wellCenterY = wellMesh.position.y;
         const wellTopY = wellCenterY + wellHeight / 2;
         const wellBottomY = wellCenterY - wellHeight / 2;
 
-        // Sort data by depth (don't filter out nulls yet)
         const sortedData = [...this.logData].sort((a, b) => a.depth - b.depth);
 
         if (sortedData.length === 0) return points;
 
-        // Get depth range from data
         const validDepths = sortedData.filter(d => !isNaN(d.depth)).map(d => d.depth);
         if (validDepths.length === 0) return points;
 
@@ -232,11 +175,9 @@ export class WellLog {
 
         if (depthRange === 0) return points;
 
-        // Determine min/max for normalization
         let minVal = this.config.min;
         let maxVal = this.config.max;
 
-        // For log scale (like RT), use logarithmic normalization
         const useLogScale = this.config.logScale || false;
 
         for (const data of sortedData) {
@@ -244,39 +185,31 @@ export class WellLog {
 
             let offset;
             const isNull = data.value === null ||
-                          data.value === WellLogConfig.nullValue ||
-                          isNaN(data.value);
+                        data.value === WellLogConfig.nullValue ||
+                        isNaN(data.value);
 
             if (isNull) {
-                // Null values: straight line at left side of well
                 offset = WellLogConfig.nullOffset;
             } else {
                 let normalizedValue;
 
                 if (useLogScale) {
-                    // Logarithmic scale
                     const logMin = Math.log10(Math.max(minVal, 0.001));
                     const logMax = Math.log10(Math.max(maxVal, 0.001));
                     const logVal = Math.log10(Math.max(data.value, 0.001));
                     normalizedValue = (logVal - logMin) / (logMax - logMin);
                 } else {
-                    // Linear scale
                     normalizedValue = (data.value - minVal) / (maxVal - minVal);
                 }
 
-                // Clamp to 0-1
                 normalizedValue = Math.max(0, Math.min(1, normalizedValue));
 
-                // Calculate offset from well center (inside well radius)
-                // Map 0-1 to -maxLogWidth to +maxLogWidth
                 offset = (normalizedValue * 2 - 1) * WellLogConfig.maxLogWidth;
             }
 
-            // Calculate Y position - map depth to well's Y range
             const depthNormalized = (data.depth - minDepth) / depthRange;
             const y = wellTopY - depthNormalized * wellHeight;
 
-            // Create point offset from well center
             points.push(new THREE.Vector3(
                 wellX + offset,
                 y,
@@ -287,20 +220,16 @@ export class WellLog {
         return points;
     }
 
-    // Removed _depthToY - now using well's actual geometry for Y alignment
-
     setVisible(visible) {
         if (this.mesh) {
             this.mesh.visible = visible;
         }
-        // Also update fill visibility
         if (this.fill) {
             this.fill.setVisible(visible);
         }
     }
 
     dispose() {
-        // Dispose fill first
         if (this.fill) {
             this.fill.dispose();
             this.fill = null;
@@ -315,23 +244,17 @@ export class WellLog {
     }
 }
 
-/**
- * WellLogData Class
- * Stores all log data for a single well
- */
 export class WellLogData {
     constructor(wellName) {
         this.wellName = wellName;
-        this.logs = {};  // logType -> Array of {depth, value}
+        this.logs = {};
         this.depthRange = { min: Infinity, max: -Infinity };
     }
 
     addDataPoint(depth, logValues) {
-        // Update depth range
         if (depth < this.depthRange.min) this.depthRange.min = depth;
         if (depth > this.depthRange.max) this.depthRange.max = depth;
 
-        // Store each log value
         for (const [logType, value] of Object.entries(logValues)) {
             if (!this.logs[logType]) {
                 this.logs[logType] = [];
@@ -351,13 +274,9 @@ export class WellLogData {
     }
 }
 
-/**
- * WellLogLoader Class
- * Loads well log data from CSV file
- */
 export class WellLogLoader {
     constructor() {
-        this.wellLogs = new Map();  // wellName -> WellLogData
+        this.wellLogs = new Map();
         this.availableLogTypes = new Set();
     }
 
@@ -384,14 +303,11 @@ export class WellLogLoader {
 
         if (rows.length === 0) return;
 
-        // Parse header
         const header = rows[0].split(',').map(h => h.trim());
 
-        // Find column indices
         const wellIdx = header.indexOf('WELL');
-        const depthIdx = header.indexOf('TVDSS');  // Use TVDSS for depth
+        const depthIdx = header.indexOf('TVDSS');
 
-        // Log columns to track
         const logColumns = ['GR', 'RT', 'RHOB', 'NPHI', 'DT', 'SP', 'PHIE', 'VSH', 'SWE'];
         const logIndices = {};
 
@@ -403,7 +319,6 @@ export class WellLogLoader {
             }
         }
 
-        // Parse data rows
         for (let i = 1; i < rows.length; i++) {
             const cols = rows[i].split(',');
 
@@ -412,15 +327,11 @@ export class WellLogLoader {
 
             if (!wellName || isNaN(depth)) continue;
 
-            // Normalize well name - store both original and normalized versions
-            // Original: "GNK-065" -> Also store as "065" and "65"
             const normalizedNames = this._getNormalizedNames(wellName);
 
-            // Get or create WellLogData (use original name as key)
             if (!this.wellLogs.has(wellName)) {
                 this.wellLogs.set(wellName, new WellLogData(wellName));
 
-                // Also store references with normalized names for easier lookup
                 for (const normName of normalizedNames) {
                     if (!this.wellLogs.has(normName)) {
                         this.wellLogs.set(normName, this.wellLogs.get(wellName));
@@ -429,7 +340,6 @@ export class WellLogLoader {
             }
             const wellLogData = this.wellLogs.get(wellName);
 
-            // Parse log values
             const logValues = {};
             for (const [logType, idx] of Object.entries(logIndices)) {
                 const value = parseFloat(cols[idx]);
@@ -440,15 +350,9 @@ export class WellLogLoader {
         }
     }
 
-    /**
-     * Generate normalized name variants for a well
-     * @param {string} wellName
-     * @returns {string[]}
-     */
     _getNormalizedNames(wellName) {
         const names = [];
 
-        // If name is like "GNK-065", extract "065" and "65"
         const match = wellName.match(/^GNK-(\d+)$/i);
         if (match) {
             const numPart = match[1];
@@ -457,7 +361,6 @@ export class WellLogLoader {
             names.push(numPart.padStart(3, '0'));   // "065"
         }
 
-        // If name is just a number, add variations
         if (/^\d+$/.test(wellName)) {
             names.push(`GNK-${wellName}`);
             names.push(`GNK-${wellName.padStart(3, '0')}`);

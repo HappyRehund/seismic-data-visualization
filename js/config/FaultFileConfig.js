@@ -1,24 +1,12 @@
-/**
- * FaultFileConfig.js
- * ===================
- * Configuration for fault CSV files.
- * Centralizes fault file paths for easy maintenance.
- * 
- * In the future, this can be replaced with database queries.
- */
-
 export const FaultFileConfig = {
     basePath: 'CSV_fault/',
 
-    /**
-     * Fault files organized by type
-     */
     faultsByType: {
         thrustFault: [
             'F1(IL^Thrust Fault).csv',
             'F6(IL^Thrust Fault).csv'
         ],
-        
+
         normalFault: [
             'F2(XL^Normal Fault).csv',
             'F3(XL^Normal Fault).csv',
@@ -155,13 +143,9 @@ export const FaultFileConfig = {
         ]
     },
 
-    /**
-     * Get all fault files with full paths
-     * @returns {string[]}
-     */
     getAllFaultFiles() {
         const allFiles = [];
-        
+
         Object.values(this.faultsByType).forEach(files => {
             files.forEach(file => {
                 allFiles.push(this.basePath + file);

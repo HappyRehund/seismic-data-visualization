@@ -1,29 +1,20 @@
 export const SeismicConfig = {
 
     inlineCount: 1092,
-
     crosslineCount: 549,
-
     timeSize: 1400,
-
     imageWidth: 2790,
-
     imageHeight: 2800,
-
     depthStep: 1100,
-
     yTop: 200,
-
     yBottom: 1600,
 
     get verticalOffset() {
         return this.timeSize + 200;
     },
-
     get maxInlineIndex() {
         return this.inlineCount - 1;
     },
-
     get maxCrosslineIndex() {
         return this.crosslineCount - 1;
     }
@@ -42,8 +33,8 @@ export const CameraConfig = {
     maxRadius: 10000,
 
     rotationSpeed: 0.005,
-    panSpeed: 2.0,          // Speed for panning (shift + drag)
-    zoomSpeed: 1.5          // Zoom smoothness multiplier
+    panSpeed: 2.0,
+    zoomSpeed: 1.5
 };
 
 export const StyleConfig = {

@@ -195,24 +195,6 @@ export class FaultLoader {
         return faults;
     }
 
-    async loadAllFaults(faultFiles, as3D = true) {
-        console.log(`Loading ${faultFiles.length} fault files...`);
-        
-        for (const file of faultFiles) {
-            try {
-                if (as3D) {
-                    await this.loadFaultSurfaces(file);
-                } else {
-                    await this.loadFaultLines(file);
-                }
-            } catch (e) {
-                console.warn(`Failed to load fault: ${file}`, e);
-            }
-        }
-        
-        console.log(`All faults loaded: ${this.faults.length} objects created`);
-    }
-
     setAllVisible(visible) {
         this.faults.forEach(f => f.setVisible(visible));
     }

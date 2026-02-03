@@ -8,7 +8,6 @@ export class Horizon {
         this.pointCloud = null;
         this.visible = true;
 
-        // Track min/max Z for color mapping
         this.minZ = Infinity;
         this.maxZ = -Infinity;
     }
@@ -44,7 +43,6 @@ export class Horizon {
         const lines = text.trim().split('\n');
         const headers = lines[0].split(',').map(h => h.trim());
 
-        // Find column indices
         const inlineIdx = headers.indexOf('Inline');
         const crosslineIdx = headers.indexOf('Crossline');
         const zIdx = headers.indexOf(zColumnName);
@@ -56,7 +54,6 @@ export class Horizon {
             );
         }
 
-        // Parse data and find ranges
         const points = [];
         let minInline = Infinity, maxInline = -Infinity;
         let minCrossline = Infinity, maxCrossline = -Infinity;
@@ -73,7 +70,6 @@ export class Horizon {
 
             points.push({ inline, crossline, z });
 
-            // Track ranges
             minInline = Math.min(minInline, inline);
             maxInline = Math.max(maxInline, inline);
             minCrossline = Math.min(minCrossline, crossline);
@@ -120,18 +116,15 @@ export class Horizon {
             colors.push(color.r, color.g, color.b);
         }
 
-        // Create geometry
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-        // Create material
         const material = new THREE.PointsMaterial({
             size: StyleConfig.horizonPointSize,
             vertexColors: true
         });
 
-        // Create and add to scene
         this.pointCloud = new THREE.Points(geometry, material);
         this.sceneManager.add(this.pointCloud);
     }
@@ -158,7 +151,6 @@ export class Horizon {
         }
     }
 }
-
 
 export class HorizonManager {
     constructor(sceneManager) {

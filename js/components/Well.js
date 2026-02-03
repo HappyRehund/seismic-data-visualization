@@ -1,16 +1,8 @@
 import { SeismicConfig, StyleConfig } from '../config/SeismicConfig.js';
 import { WellLog } from './WellLog.js';
 
-/**
- * WellLabel Class
- * Renders a text label above the well using a sprite
- * Follows OOP best practices with single responsibility
- */
 export class WellLabel {
-    /**
-     * @param {Well} well - Parent Well instance
-     * @param {string} text - Label text to display
-     */
+
     constructor(well, text) {
         this.well = well;
         this.text = text;
@@ -19,60 +11,46 @@ export class WellLabel {
         this._create();
     }
 
-    /**
-     * Create the text sprite
-     * @private
-     */
     _create() {
-        // Create canvas for text rendering
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
 
-        // Configure canvas size
         const fontSize = 48;
         const padding = 20;
         context.font = `bold ${fontSize}px Arial`;
         const textMetrics = context.measureText(this.text);
-        
+
         canvas.width = textMetrics.width + padding * 2;
         canvas.height = fontSize + padding * 2;
 
-        // Draw background (semi-transparent dark)
         context.fillStyle = 'rgba(0, 0, 0, 0.7)';
         this._roundRect(context, 0, 0, canvas.width, canvas.height, 8);
         context.fill();
 
-        // Draw text
         context.font = `bold ${fontSize}px Arial`;
         context.fillStyle = '#ffffff';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         context.fillText(this.text, canvas.width / 2, canvas.height / 2);
 
-        // Create texture from canvas
         const texture = new THREE.CanvasTexture(canvas);
         texture.needsUpdate = true;
 
-        // Create sprite material
         const material = new THREE.SpriteMaterial({
             map: texture,
             transparent: true,
-            depthTest: false,      // Always render on top
+            depthTest: false,
             depthWrite: false
         });
 
-        // Create sprite
         this.sprite = new THREE.Sprite(material);
 
-        // Calculate scale based on canvas aspect ratio
         const aspectRatio = canvas.width / canvas.height;
         const labelHeight = 15;  // Height in world units
         this.sprite.scale.set(labelHeight * aspectRatio, labelHeight, 1);
 
-        // Position above the well
         this._updatePosition();
 
-        // Set render order to ensure it's on top
         this.sprite.renderOrder = 100;
 
         this.sprite.userData = {
@@ -83,10 +61,6 @@ export class WellLabel {
         this.well.sceneManager.add(this.sprite);
     }
 
-    /**
-     * Draw rounded rectangle on canvas
-     * @private
-     */
     _roundRect(ctx, x, y, width, height, radius) {
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
@@ -101,10 +75,6 @@ export class WellLabel {
         ctx.closePath();
     }
 
-    /**
-     * Update label position to be above well
-     * @private
-     */
     _updatePosition() {
         if (!this.sprite || !this.well.mesh) return;
 
@@ -112,7 +82,6 @@ export class WellLabel {
         const wellHeight = wellMesh.geometry.parameters.height;
         const wellTopY = wellMesh.position.y + wellHeight / 2;
 
-        // Position label above the well top
         this.sprite.position.set(
             wellMesh.position.x,
             wellTopY + 20,  // Offset above well
@@ -120,19 +89,12 @@ export class WellLabel {
         );
     }
 
-    /**
-     * Set visibility of the label
-     * @param {boolean} visible
-     */
     setVisible(visible) {
         if (this.sprite) {
             this.sprite.visible = visible;
         }
     }
 
-    /**
-     * Dispose the label and free resources
-     */
     dispose() {
         if (this.sprite) {
             this.well.sceneManager.remove(this.sprite);
@@ -152,42 +114,32 @@ export class Well {
         this.originalColor = color;
         this.isHighlighted = false;
 
-        // Well log related
         this.logData = null;           // WellLogData instance
         this.currentLogType = 'None';  // Currently displayed log type
         this.wellLog = null;           // Current WellLog visualization
 
-        // Well label
         this.label = null;             // WellLabel instance
 
         this._create(inline, crossline, timeStart, timeEnd, radius, color);
         this._createLabel();
     }
 
-    /**
-     * Create the well name label
-     * @private
-     */
     _createLabel() {
         this.label = new WellLabel(this, this.name);
     }
 
     _create(inline, crossline, timeStart, timeEnd, radius, color) {
-        // Calculate 3D positions
-        // Note: Well coordinates typically use 1-based indexing
         const x = ((inline - 1) / (SeismicConfig.inlineCount - 1)) * SeismicConfig.imageWidth;
         const z = ((crossline - 1) / (SeismicConfig.crosslineCount - 1)) * SeismicConfig.imageWidth;
 
         const yTop = this._mapTimeToY(timeStart);
         const yBottom = this._mapTimeToY(timeEnd);
 
-        // Calculate pipe dimensions
         const height = Math.abs(
             ((yTop - yBottom) / SeismicConfig.timeSize) * SeismicConfig.imageHeight
         );
         const centerY = (yTop + yBottom) / 2;
 
-        // Create pipe geometry
         const geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
         const material = new THREE.MeshPhongMaterial({
             color,
@@ -198,18 +150,17 @@ export class Well {
         });
 
         this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.renderOrder = 0;  // Render well first, then log on top
+        this.mesh.renderOrder = 0;
         this.mesh.position.set(
             x,
             -centerY / SeismicConfig.timeSize * SeismicConfig.imageHeight + SeismicConfig.timeSize,
             z
         );
 
-        // Add user data for identification and highlighting
         this.mesh.userData = {
             type: 'well',
             name: this.name,
-            wellInstance: this // Store reference to this Well instance
+            wellInstance: this
         };
 
         this.sceneManager.add(this.mesh);
@@ -228,7 +179,6 @@ export class Well {
     highlight() {
         if (this.mesh && !this.isHighlighted) {
             const color = new THREE.Color(this.originalColor);
-            // Darken the color by 40%
             color.multiplyScalar(0.6);
             this.mesh.material.color.copy(color);
             this.isHighlighted = true;
@@ -242,20 +192,11 @@ export class Well {
         }
     }
 
-    /**
-     * Set the well log data for this well
-     * @param {WellLogData} logData
-     */
     setLogData(logData) {
         this.logData = logData;
     }
 
-    /**
-     * Display a specific log type
-     * @param {string} logType - Log type to display (e.g., 'GR', 'RT', 'None')
-     */
     setLogType(logType) {
-        // Remove existing log visualization
         if (this.wellLog) {
             this.wellLog.dispose();
             this.wellLog = null;
@@ -263,7 +204,6 @@ export class Well {
 
         this.currentLogType = logType;
 
-        // Create new log visualization if not 'None'
         if (logType !== 'None' && this.logData) {
             const logDataArray = this.logData.getLogData(logType);
             if (logDataArray && logDataArray.length > 0) {
@@ -277,25 +217,16 @@ export class Well {
         }
     }
 
-    /**
-     * Get available log types for this well
-     * @returns {string[]}
-     */
     getAvailableLogs() {
         if (!this.logData) return ['None'];
         return ['None', ...this.logData.getAvailableLogs()];
     }
 
-    /**
-     * Get current log type
-     * @returns {string}
-     */
     getCurrentLogType() {
         return this.currentLogType;
     }
 
     dispose() {
-        // Dispose label
         if (this.label) {
             this.label.dispose();
             this.label = null;
@@ -336,8 +267,6 @@ export class WellLoader {
             const crossIdx = header.indexOf('Crossline_n');
             const nameIdx = header.indexOf('Well_name');
 
-            // Track coordinates to detect duplicates
-            // key: "inline,crossline" -> { primaryName, duplicates: [] }
             const coordinateMap = new Map();
 
             // First pass: identify all wells and group by coordinates
@@ -389,8 +318,8 @@ export class WellLoader {
                     primary.name,
                     primary.inline,
                     primary.crossline,
-                    0,              // timeStart
-                    defaultTimeEnd  // timeEnd
+                    0,
+                    defaultTimeEnd
                 );
 
                 // Store duplicate names for reference
@@ -399,7 +328,6 @@ export class WellLoader {
                 this.wells.push(well);
                 this.wellsMap.set(primary.name, well);
 
-                // Also map duplicate names to the same well for log data matching
                 for (const dupName of duplicates) {
                     if (!this.wellsMap.has(dupName)) {
                         this.wellsMap.set(dupName, well);
@@ -432,23 +360,14 @@ export class WellLoader {
         }
     }
 
-    setWellsVisible(names, visible) {
-        names.forEach(name => this.setWellVisible(name, visible));
-    }
-
     setAllVisible(visible) {
         this.wells.forEach(w => w.setVisible(visible));
     }
 
-    /**
-     * Attach log data to wells
-     * @param {WellLogLoader} wellLogLoader
-     */
     attachLogData(wellLogLoader) {
         let attachedCount = 0;
 
         for (const [name, well] of this.wellsMap) {
-            // Try multiple name formats to match well log data
             const namesToTry = [
                 name,                           // Original: "067"
                 `GNK-${name}`,                  // With prefix: "GNK-067"
@@ -480,11 +399,6 @@ export class WellLoader {
         console.log(`Total wells with log data: ${attachedCount}/${this.wellsMap.size}`);
     }
 
-    /**
-     * Set log type for a specific well
-     * @param {string} wellName
-     * @param {string} logType
-     */
     setWellLogType(wellName, logType) {
         const well = this.wellsMap.get(wellName);
         if (well) {
@@ -492,30 +406,16 @@ export class WellLoader {
         }
     }
 
-    /**
-     * Get available log types for a specific well
-     * @param {string} wellName
-     * @returns {string[]}
-     */
     getWellAvailableLogs(wellName) {
         const well = this.wellsMap.get(wellName);
         return well ? well.getAvailableLogs() : ['None'];
     }
 
-    /**
-     * Get current log type for a specific well
-     * @param {string} wellName
-     * @returns {string}
-     */
     getWellCurrentLogType(wellName) {
         const well = this.wellsMap.get(wellName);
         return well ? well.getCurrentLogType() : 'None';
     }
 
-    /**
-     * Set log type for all wells at once
-     * @param {string} logType
-     */
     setAllWellsLogType(logType) {
         let changedCount = 0;
         for (const well of this.wells) {

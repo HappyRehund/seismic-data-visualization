@@ -1,87 +1,47 @@
-/**
- * App.js
- * =======
- * Main application entry point.
- *
- * This file orchestrates all components and follows:
- * - DEPENDENCY INVERSION principle - high-level modules depend on abstractions
- * - FACTORY PATTERN - DataLoaderFactory creates appropriate loaders
- * - STRATEGY PATTERN - Swappable data sources (DB vs CSV)
- * - OBSERVER PATTERN - Loading state management
- *
- * DATA FLOW:
- * 1. App initializes SceneManager (Three.js infrastructure)
- * 2. App uses DataLoadingOrchestrator to load all data
- * 3. App creates UI controls and connects them to components
- * 4. App starts the render loop
- *
- * TO ADD NEW DATA SOURCES:
- * 1. Implement new DataSourceStrategy in DataLoaderFactory.js
- * 2. Register with DataSourceManager (priority determines fallback order)
- * 
- * TO ADD NEW LOADERS:
- * 1. Extend AbstractDataLoader in DataLoaders.js
- * 2. Register with SeismicDataLoaderFactory
- */
-
-// Core
 import { SceneManager } from './core/SceneManager.js';
+import {
+    FaultFacade,
+    HorizonFacade,
+    SceneFacade,
+    SeismicPlaneFacade,
+    WellFacade
+} from './facade/index.js';
 
-// Components
-import { InlinePlane, CrosslinePlane } from './components/SeismicPlane.js';
-
-// Data Loading (Factory Pattern)
 import { DataLoadingOrchestrator } from './data/DataLoaders.js';
-import { loadingStateManager } from './data/DataLoaderFactory.js';
-
-// UI
 import { UIManager } from './ui/UIControls.js';
 import { loadingUI } from './ui/LoadingUI.js';
-
-// Configuration for fault files
 import { FaultFileConfig } from './config/FaultFileConfig.js';
+import { loadingStateManager } from './data/DataLoaderFactory.js';
 
 class SeismicViewerApp {
     constructor() {
-        // Core systems
         this.sceneManager = null;
         this.uiManager = null;
 
-        // Data loading orchestrator (Factory Pattern)
         this.dataOrchestrator = null;
 
-        // Components
-        this.inlinePlane = null;
-        this.crosslinePlane = null;
-        
-        // Loaded components (from factory)
-        this.horizonManager = null;
-        this.faultLoader = null;
-        this.wellLoader = null;
-        this.wellLogLoader = null;
+        this.sceneFacade = null;
+        this.seismicPlanes = null;
+        this.faults = null;
+        this.horizons = null;
+        this.wells = null;
     }
 
     async init() {
         console.log('Initializing Seismic Viewer...');
 
         try {
-            // Step 1: Setup 3D scene
             this._initScene();
 
-            // Step 2: Create seismic plane components
-            this._initComponents();
+            this._initSeismicPlanes();
 
-            // Step 3: Initialize data orchestrator
             this._initDataOrchestrator();
 
-            // Step 4: Load all data with progress tracking
             await this._loadData();
 
-            // Step 5: Setup UI controls (after data is loaded)
             this._initUI();
 
-            // Step 6: Start rendering
-            this.sceneManager.startRenderLoop();
+            this.sceneFacade.startRenderLoop();
 
             console.log('Seismic Viewer initialized successfully!');
         } catch (error) {
@@ -93,11 +53,11 @@ class SeismicViewerApp {
 
     _initScene() {
         this.sceneManager = new SceneManager();
+        this.sceneFacade = new SceneFacade(this.sceneManager);
     }
 
-    _initComponents() {
-        this.inlinePlane = new InlinePlane(this.sceneManager);
-        this.crosslinePlane = new CrosslinePlane(this.sceneManager);
+    _initSeismicPlanes() {
+        this.seismicPlanes = new SeismicPlaneFacade(this.sceneManager);
     }
 
     _initDataOrchestrator() {
@@ -108,31 +68,24 @@ class SeismicViewerApp {
     _initUI() {
         this.uiManager = new UIManager();
 
-        // Connect sliders to planes
-        this.uiManager.createInlineSlider(this.inlinePlane);
-        this.uiManager.createCrosslineSlider(this.crosslinePlane);
+        const planes = this.seismicPlanes.getPlanes();
+        this.uiManager.createInlineSlider(planes.inline);
+        this.uiManager.createCrosslineSlider(planes.crossline);
 
-        // Connect toggle button to horizons
-        this.uiManager.createHorizonToggle(this.horizonManager);
+        this.uiManager.createHorizonToggle(this.horizons.getManager());
 
-        // Connect toggle button to faults
-        this.uiManager.createFaultToggle(this.faultLoader);
+        this.uiManager.createFaultToggle(this.faults.getLoader());
 
-        // Connect well panel to well loader
-        this.uiManager.createWellPanel(this.wellLoader);
+        this.uiManager.createWellPanel(this.wells.getWellLoader());
 
-        // Refresh well log selectors
         this.uiManager.refreshWellLogSelectors();
 
-        // Connect reset camera button
         this.uiManager.createCameraReset(this.sceneManager);
     }
 
     async _loadData() {
-        // Get fault files configuration
         const faultFiles = FaultFileConfig.getAllFaultFiles();
 
-        // Load all data using the orchestrator
         const result = await this.dataOrchestrator.loadAll({
             horizonConfig: {
                 csvPath: '/horizon.csv',
@@ -150,45 +103,75 @@ class SeismicViewerApp {
             }
         });
 
-        // Store references to loaded components
-        this.horizonManager = result.horizonManager;
-        this.faultLoader = result.faultLoader;
-        this.wellLoader = result.wellLoader;
-        this.wellLogLoader = result.wellLogLoader;
+        this.horizons = new HorizonFacade(this.sceneManager);
+        this.horizons.horizonManager = result.horizonManager;
 
-        // Update loading UI with data source info
+        this.faults = new FaultFacade(this.sceneManager);
+        this.faults.faultLoader = result.faultLoader;
+        this.faults.isLoaded = true;
+
+        this.wells = new WellFacade(this.sceneManager);
+        this.wells.wellLoader = result.wellLoader;
+        this.wells.wellLogLoader = result.wellLogLoader;
+
         loadingUI.setDataSource(result.dataSource);
     }
 
-    // ========================================
-    // PUBLIC API METHODS
-    // ========================================
-
     async addHorizon(csvPath, zColumn = 'Z') {
-        return await this.horizonManager.addHorizon(csvPath, zColumn);
+        return await this.horizons.load(csvPath, zColumn);
     }
 
     async addFaultLines(csvPath) {
-        await this.faultLoader.loadFaultLines(csvPath);
+        await this.faults.addFaultLines(csvPath);
     }
 
     async addFaultSurfaces(csvPath) {
-        await this.faultLoader.loadFaultSurfaces(csvPath);
+        await this.faults.addFaultSurface(csvPath);
     }
 
     async addWells(csvPath) {
-        await this.wellLoader.load(csvPath);
+        await this.wells.loadWells(csvPath);
     }
 
-    /**
-     * Get the data source being used
-     * @returns {string}
-     */
+    setInlineIndex(index) {
+        this.seismicPlanes.setInlineIndex(index);
+    }
+
+    setCrosslineIndex(index) {
+        this.seismicPlanes.setCrosslineIndex(index);
+    }
+
+    toggleHorizons() {
+        return this.horizons.toggle();
+    }
+
+    toggleFaults() {
+        return this.faults.toggle();
+    }
+
+    toggleWells() {
+        return this.wells.toggle();
+    }
+
+    resetCamera() {
+        this.sceneFacade.resetCamera();
+    }
+
     getDataSource() {
         return this.dataOrchestrator?.getFactory()
             .getDataSourceManager()
             .getCurrentSourceName() || 'Unknown';
     }
+
+    getSceneFacade() { return this.sceneFacade; }
+
+    getSeismicPlanesFacade() { return this.seismicPlanes; }
+
+    getFaultFacade() { return this.faults; }
+
+    getHorizonFacade() { return this.horizons; }
+
+    getWellFacade() { return this.wells; }
 }
 
 const app = new SeismicViewerApp();

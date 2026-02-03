@@ -7,25 +7,28 @@ export class SceneManager {
         this.camera = null;
         this.renderer = null;
 
-        // Camera orbit controls state
         this.orbitState = {
             isDragging: false,
-            isPanning: false,           // NEW: Track if panning (Shift + drag)
-            previousMouse: { x: 0, y: 0 },
+            isPanning: false,
+            previousMouse: {
+                x: 0,
+                y: 0
+            },
             theta: CameraConfig.initialTheta,
             phi: CameraConfig.initialPhi,
             radius: CameraConfig.initialRadius,
-            // NEW: Camera target offset for panning
-            targetOffset: { x: 0, y: 0, z: 0 }
+            targetOffset: {
+                x: 0,
+                y: 0,
+                z: 0
+            }
         };
 
-        // Raycaster for mouse interaction
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.tooltip = null;
-        this.hoveredWell = null; // Track currently hovered well for highlighting
+        this.hoveredWell = null;
 
-        // Performance: throttle raycasting
         this._lastRaycastTime = 0;
         this._raycastThrottle = 50; // ms between raycasts
 
@@ -34,11 +37,9 @@ export class SceneManager {
     }
 
     _init() {
-        // Create scene
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(StyleConfig.backgroundColor);
 
-        // Create camera
         this.camera = new THREE.PerspectiveCamera(
             CameraConfig.fov,
             window.innerWidth / window.innerHeight,
@@ -46,30 +47,25 @@ export class SceneManager {
             CameraConfig.far
         );
 
-        // Create renderer with performance optimizations
-        this.renderer = new THREE.WebGLRenderer({ 
+        this.renderer = new THREE.WebGLRenderer({
             antialias: true,
-            powerPreference: 'high-performance',  // Use dedicated GPU if available
-            stencil: false,                       // Disable stencil buffer if not needed
+            powerPreference: 'high-performance',
+            stencil: false,
             depth: true
         });
+
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         document.body.appendChild(this.renderer.domElement);
 
-        // Add lighting
         this._setupLighting();
 
-        // Add bounding box
         this._createBoundingBox();
 
-        // Setup camera controls
         this._setupCameraControls();
 
-        // Handle window resize
         this._setupResizeHandler();
 
-        // Position camera
         this._updateCameraPosition();
     }
 
@@ -95,7 +91,6 @@ export class SceneManager {
         const canvas = this.renderer.domElement;
 
         canvas.addEventListener('mousedown', (e) => {
-            // Check if Shift is held for panning
             if (e.shiftKey) {
                 this.orbitState.isPanning = true;
                 this.orbitState.isDragging = false;
@@ -111,7 +106,6 @@ export class SceneManager {
             this.orbitState.isPanning = false;
         });
 
-        // Handle mouse leaving window
         canvas.addEventListener('mouseleave', () => {
             this.orbitState.isDragging = false;
             this.orbitState.isPanning = false;
@@ -120,7 +114,6 @@ export class SceneManager {
         canvas.addEventListener('mousemove', (e) => this._handleMouseMove(e));
         canvas.addEventListener('wheel', (e) => this._handleMouseWheel(e), { passive: true });
 
-        // Prevent context menu on right-click
         canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
@@ -135,13 +128,11 @@ export class SceneManager {
             return;
         }
 
-        // Handle rotation (normal drag)
         if (!this.orbitState.isDragging) return;
 
         this.orbitState.theta -= deltaX * CameraConfig.rotationSpeed;
         this.orbitState.phi -= deltaY * CameraConfig.rotationSpeed;
 
-        // Clamp phi to prevent camera flip
         const EPS = 0.01;
         this.orbitState.phi = Math.max(EPS, Math.min(Math.PI - EPS, this.orbitState.phi));
 
@@ -150,36 +141,23 @@ export class SceneManager {
         this.orbitState.previousMouse = { x: e.clientX, y: e.clientY };
     }
 
-    /**
-     * Handle camera panning (shift + drag)
-     * @private
-     * @param {number} deltaX - Mouse X delta
-     * @param {number} deltaY - Mouse Y delta
-     */
     _handlePan(deltaX, deltaY) {
         const panSpeed = CameraConfig.panSpeed;
-        
-        // Calculate camera right vector based on current theta
-        // Right vector is perpendicular to view direction in XZ plane
+
         const { theta } = this.orbitState;
-        
-        // Camera looks toward center, so right vector is:
-        // cross(viewDirection, upVector) = (-sin(theta), 0, cos(theta))
+
         const rightX = -Math.sin(theta);
         const rightZ = Math.cos(theta);
-        
-        // Pan horizontally (left/right) along camera's right vector
+
         this.orbitState.targetOffset.x += deltaX * panSpeed * rightX;
         this.orbitState.targetOffset.z += deltaX * panSpeed * rightZ;
-        
-        // Pan vertically (up/down)
+
         this.orbitState.targetOffset.y += deltaY * panSpeed;
-        
+
         this._updateCameraPosition();
     }
 
     _handleMouseWheel(e) {
-        // Smoother zoom with configurable speed
         const zoomDelta = e.deltaY * CameraConfig.zoomSpeed;
         this.orbitState.radius += zoomDelta;
         this.orbitState.radius = Math.max(
@@ -189,9 +167,6 @@ export class SceneManager {
         this._updateCameraPosition();
     }
 
-    /**
-     * Reset camera to initial position and clear pan offset
-     */
     resetCamera() {
         this.orbitState.theta = CameraConfig.initialTheta;
         this.orbitState.phi = CameraConfig.initialPhi;
@@ -204,12 +179,10 @@ export class SceneManager {
         const center = CoordinateSystem.getBoundingBoxCenter();
         const { radius, phi, theta, targetOffset } = this.orbitState;
 
-        // Apply target offset to center for panning
         const targetX = center.x + targetOffset.x;
         const targetY = center.y + targetOffset.y;
         const targetZ = center.z + targetOffset.z;
 
-        // Calculate camera position based on spherical coordinates
         const x = targetX + radius * Math.sin(phi) * Math.cos(theta);
         const y = targetY + radius * Math.cos(phi);
         const z = targetZ + radius * Math.sin(phi) * Math.sin(theta);
@@ -235,7 +208,6 @@ export class SceneManager {
     }
 
     startRenderLoop() {
-        // Performance: Use bound function to avoid creating new function each frame
         const render = () => {
             requestAnimationFrame(render);
             this.renderer.render(this.scene, this.camera);
@@ -245,15 +217,13 @@ export class SceneManager {
 
     _setupMouseInteraction() {
         this.tooltip = document.getElementById('wellTooltip');
-        
+
         if (!this.tooltip) {
             console.warn('Well tooltip element not found');
             return;
         }
-        
-        // Track mouse movement for tooltip
+
         this.renderer.domElement.addEventListener('mousemove', (event) => {
-            // Don't show tooltip while dragging camera
             if (this.orbitState.isDragging) {
                 this._hideTooltip();
                 return;
@@ -263,34 +233,29 @@ export class SceneManager {
     }
 
     _checkWellHover(e) {
-        // Performance: Throttle raycasting
         const now = performance.now();
         if (now - this._lastRaycastTime < this._raycastThrottle) {
             return;
         }
         this._lastRaycastTime = now;
 
-        // Calculate mouse position in normalized device coordinates
         const rect = this.renderer.domElement.getBoundingClientRect();
         this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-        // Update raycaster
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
-        // Performance: Only raycast against wells, not all scene children
         const wellMeshes = this.scene.children.filter(
             obj => obj.userData && obj.userData.type === 'well'
         );
 
         const intersects = this.raycaster.intersectObjects(wellMeshes, false);
-        
+
         let wellFound = false;
         let newHoveredWell = null;
-        
+
         for (let intersect of intersects) {
-            // Check if the intersected object is a well AND is visible
-            if (intersect.object.userData && 
+            if (intersect.object.userData &&
                 intersect.object.userData.type === 'well' &&
                 intersect.object.visible) {
                 this._showTooltip(intersect.object.userData.name, e.clientX, e.clientY);
@@ -300,18 +265,15 @@ export class SceneManager {
             }
         }
 
-        // Update highlighting
         if (newHoveredWell !== this.hoveredWell) {
-            // Unhighlight previous well
             if (this.hoveredWell && this.hoveredWell.userData.wellInstance) {
                 this.hoveredWell.userData.wellInstance.unhighlight();
             }
-            
-            // Highlight new well
+
             if (newHoveredWell && newHoveredWell.userData.wellInstance) {
                 newHoveredWell.userData.wellInstance.highlight();
             }
-            
+
             this.hoveredWell = newHoveredWell;
         }
 
@@ -322,7 +284,7 @@ export class SceneManager {
 
     _showTooltip(wellName, x, y) {
         if (!this.tooltip) return;
-        
+
         this.tooltip.textContent = `Well ${wellName}`;
         this.tooltip.style.display = 'block';
         this.tooltip.style.left = `${x + 15}px`;
