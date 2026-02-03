@@ -104,14 +104,14 @@ class SeismicViewerApp {
 
             const result = await this.dataOrchestrator.loadAll({
                 horizonConfig: {
-                    csvPath: '/horizon.csv',
+                    csvPath: '/csv_data/horizon/horizon.csv',
                     zColumns: ['top', 'bottom']
                 },
                 wellConfig: {
-                    csvPath: '/well_coordinates.csv'
+                    csvPath: '/csv_data/well/well_coordinates.csv'
                 },
                 wellLogConfig: {
-                    csvPath: '/GNK_update.csv'
+                    csvPath: '/csv_data/well_log/gnk_well_log.csv'
                 },
                 faultConfig: {
                     faultFiles: faultFiles,

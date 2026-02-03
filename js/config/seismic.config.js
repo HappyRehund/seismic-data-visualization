@@ -52,8 +52,8 @@ export const StyleConfig = {
 };
 
 export const PathConfig = {
-    inlineFolder: '/inline',
-    crosslineFolder: '/crossline',
+    inlineFolder: '/csv_data/inline_crossline/inline',
+    crosslineFolder: '/csv_data/inline_crossline/crossline',
 
     getInlinePath(index) {
         return `${this.inlineFolder}/inline_${index + 1}.png`;
