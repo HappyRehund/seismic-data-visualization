@@ -1,5 +1,5 @@
-import { WellLoader } from '../components/Well.js';
-import { WellLogLoader } from '../components/WellLog.js';
+import { WellLoader } from '../components/well.js';
+import { WellLogLoader } from '../components/well-log.js';
 
 export class WellFacade {
     constructor(sceneManager) {

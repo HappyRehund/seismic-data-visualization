@@ -1,4 +1,4 @@
-import { FaultLoader } from '../components/Fault.js';
+import { FaultLoader } from '../components/fault.js';
 
 export class FaultFacade {
     constructor(sceneManager) {

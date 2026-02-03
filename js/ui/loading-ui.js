@@ -5,7 +5,7 @@
  * Implements Observer pattern to react to loading state changes
  */
 
-import { loadingStateManager } from '../data/DataLoaderFactory.js';
+import { loadingStateManager } from '../data/data-loader-factory.js';
 
 /**
  * LoadingUI Class
@@ -65,8 +65,8 @@ export class LoadingUI {
      */
     _updateStatus(currentTask) {
         if (this.statusText) {
-            this.statusText.textContent = currentTask 
-                ? `Loading ${currentTask}...` 
+            this.statusText.textContent = currentTask
+                ? `Loading ${currentTask}...`
                 : 'Processing...';
         }
     }
@@ -148,8 +148,8 @@ export class LoadingUI {
      */
     _onComplete(hasErrors) {
         if (this.statusText) {
-            this.statusText.textContent = hasErrors 
-                ? 'Completed with some issues' 
+            this.statusText.textContent = hasErrors
+                ? 'Completed with some issues'
                 : 'Loading complete!';
         }
 

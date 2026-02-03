@@ -1,4 +1,4 @@
-import { WellLogConfig } from '../config/WellLogConfig.js';
+import { WellLogConfig } from '../config/well-log.config.js';
 export class WellLogFill {
     constructor(wellLog, curvePoints, fillConfig) {
         this.wellLog = wellLog;

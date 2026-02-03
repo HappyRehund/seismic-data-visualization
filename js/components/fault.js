@@ -1,5 +1,5 @@
-import { StyleConfig } from '../config/SeismicConfig.js';
-import { CoordinateSystem } from '../core/CoordinateSystem.js';
+import { StyleConfig } from '../config/seismic.config.js';
+import { CoordinateSystem } from '../core/coordinate-system.js';
 
 export class FaultSegment {
     constructor(sceneManager, point1, point2, name, color = StyleConfig.defaultFaultColor) {

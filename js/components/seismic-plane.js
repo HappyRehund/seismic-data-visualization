@@ -1,5 +1,5 @@
-import { SeismicConfig, PathConfig } from '../config/SeismicConfig.js';
-import { CoordinateSystem } from '../core/CoordinateSystem.js';
+import { SeismicConfig, PathConfig } from '../config/seismic.config.js';
+import { CoordinateSystem } from '../core/coordinate-system.js';
 
 class SeismicPlaneBase {
     constructor(sceneManager) {

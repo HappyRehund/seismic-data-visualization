@@ -1,4 +1,4 @@
-import { HorizonManager } from '../components/Horizon.js';
+import { HorizonManager } from '../components/horizon.js';
 
 export class HorizonFacade {
     constructor(sceneManager) {

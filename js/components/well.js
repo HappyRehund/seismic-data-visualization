@@ -1,5 +1,5 @@
-import { SeismicConfig, StyleConfig } from '../config/SeismicConfig.js';
-import { WellLog } from './WellLog.js';
+import { SeismicConfig, StyleConfig } from '../config/index.js';
+import { WellLog } from './well-log.js';
 
 export class WellLabel {
 

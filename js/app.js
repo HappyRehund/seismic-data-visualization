@@ -1,4 +1,4 @@
-import { SceneManager } from './core/SceneManager.js';
+import { SceneManager } from './core/scene-manager.js';
 import {
     FaultFacade,
     HorizonFacade,
@@ -7,11 +7,11 @@ import {
     WellFacade
 } from './facade/index.js';
 
-import { DataLoadingOrchestrator } from './data/DataLoaders.js';
-import { UIManager } from './ui/UIControls.js';
-import { loadingUI } from './ui/LoadingUI.js';
-import { FaultFileConfig } from './config/FaultFileConfig.js';
-import { loadingStateManager } from './data/DataLoaderFactory.js';
+import { DataLoadingOrchestrator } from './data/data-loader.js';
+import { UIManager } from './ui/ui-controls.js';
+import { loadingUI } from './ui/loading-ui.js';
+import { FaultFileConfig } from './config/fault-file.config.js';
+import { loadingStateManager } from './data/data-loader-factory.js';
 
 class SeismicViewerApp {
     constructor() {

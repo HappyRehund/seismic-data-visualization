@@ -1,4 +1,4 @@
-import { SeismicConfig } from '../config/SeismicConfig.js';
+import { SeismicConfig } from '../config/seismic.config.js';
 export class SliderControl {
     constructor(sliderId, labelId, maxValue, onChange) {
         this.slider = document.getElementById(sliderId);

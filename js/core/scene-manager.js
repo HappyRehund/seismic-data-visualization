@@ -1,5 +1,5 @@
-import { SeismicConfig, CameraConfig, StyleConfig } from '../config/SeismicConfig.js';
-import { CoordinateSystem } from './CoordinateSystem.js';
+import { SeismicConfig, CameraConfig, StyleConfig } from '../config/seismic.config.js';
+import { CoordinateSystem } from './coordinate-system.js';
 
 export class SceneManager {
     constructor() {

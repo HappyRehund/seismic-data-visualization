@@ -3,18 +3,18 @@
  * ===============
  * Concrete data loader implementations using Factory pattern.
  * Each loader extends AbstractDataLoader and implements specific loading logic.
- * 
+ *
  * ARCHITECTURE:
  * - AbstractDataLoader provides template method for loading flow
  * - Concrete loaders implement _fetchData() and _processData()
  * - DataSourceManager handles DB vs CSV fallback automatically
  */
 
-import { AbstractDataLoader, DataLoaderFactory, loadingStateManager } from './DataLoaderFactory.js';
-import { HorizonManager } from '../components/Horizon.js';
-import { FaultLoader } from '../components/Fault.js';
-import { WellLoader } from '../components/Well.js';
-import { WellLogLoader } from '../components/WellLog.js';
+import { AbstractDataLoader, DataLoaderFactory, loadingStateManager } from './data-loader-factory.js';
+import { HorizonManager } from '../components/horizon.js';
+import { FaultLoader } from '../components/fault.js';
+import { WellLoader } from '../components/well.js';
+import { WellLogLoader } from '../components/well-log.js';
 
 // ============================================================
 // HORIZON LOADER
@@ -32,7 +32,7 @@ export class HorizonDataLoader extends AbstractDataLoader {
 
     async _fetchData(options) {
         const { csvPath = '/horizon.csv', zColumns = ['top', 'bottom'] } = options;
-        
+
         try {
             // Try database first
             const data = await this.dataSourceManager.fetch('horizons', {});
@@ -332,14 +332,14 @@ export class DataLoadingOrchestrator {
         try {
             loadingStateManager.updateTask('wellLog', { status: 'loading', progress: 0 });
             this.results.wellLog = await this.loaders.wellLog.load(wellLogConfig);
-            
+
             // Attach log data to wells if both loaded successfully
             if (this.results.well && this.results.wellLog) {
                 const wellLoader = this.loaders.well.getLoader();
                 const wellLogLoader = this.loaders.wellLog.getLoader();
                 wellLoader.attachLogData(wellLogLoader);
             }
-            
+
             loadingStateManager.completeTask('wellLog', true, 'Loaded');
         } catch (error) {
             console.warn('Well log loading failed:', error);

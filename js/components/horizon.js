@@ -1,5 +1,5 @@
-import { SeismicConfig, StyleConfig } from '../config/SeismicConfig.js';
-import { CoordinateSystem } from '../core/CoordinateSystem.js';
+import { SeismicConfig, StyleConfig } from '../config/seismic.config.js';
+import { CoordinateSystem } from '../core/coordinate-system.js';
 
 export class Horizon {
 

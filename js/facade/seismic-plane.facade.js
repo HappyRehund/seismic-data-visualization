@@ -1,4 +1,4 @@
-import { InlinePlane, CrosslinePlane } from '../components/SeismicPlane.js';
+import { InlinePlane, CrosslinePlane } from '../components/seismic-plane.js';
 
 export class SeismicPlaneFacade {
     constructor(sceneManager) {
