@@ -247,9 +247,9 @@ export class Well {
 export class WellLoader {
     constructor(sceneManager) {
         this.sceneManager = sceneManager;
-        this.wells = [];           // Array of Well objects
+        this.wells = [];
         this.wellsMap = new Map(); // Map of name -> Well for quick lookup
-        this.onWellsLoaded = null; // Callback when wells are loaded
+        this.onWellsLoaded = null;
     }
 
     async load(path, defaultTimeEnd = 1200) {
@@ -301,13 +301,11 @@ export class WellLoader {
             for (const [coordKey, coordData] of coordinateMap) {
                 const { primary, duplicates } = coordData;
 
-                // Skip if we already have this well name
                 if (this.wellsMap.has(primary.name)) {
                     console.log(`Skipping duplicate well name: ${primary.name}`);
                     continue;
                 }
 
-                // Create display name with duplicate info
                 let displayName = primary.name;
                 if (duplicates.length > 0) {
                     console.log(`Well ${primary.name} has duplicates at same location: ${duplicates.join(', ')}`);
@@ -322,7 +320,6 @@ export class WellLoader {
                     defaultTimeEnd
                 );
 
-                // Store duplicate names for reference
                 well.duplicateNames = duplicates;
 
                 this.wells.push(well);
