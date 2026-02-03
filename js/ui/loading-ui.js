@@ -1,16 +1,4 @@
-/**
- * LoadingUI.js
- * =============
- * Manages the loading screen UI
- * Implements Observer pattern to react to loading state changes
- */
-
 import { loadingStateManager } from '../data/data-loader-factory.js';
-
-/**
- * LoadingUI Class
- * Manages the visual loading screen and progress indicators
- */
 export class LoadingUI {
     constructor() {
         this.screen = document.getElementById('loadingScreen');
@@ -24,19 +12,10 @@ export class LoadingUI {
         this._bindToStateManager();
     }
 
-    /**
-     * Bind to the loading state manager
-     * @private
-     */
     _bindToStateManager() {
         loadingStateManager.addListener((state) => this._onStateChange(state));
     }
 
-    /**
-     * Handle state changes from LoadingStateManager
-     * @private
-     * @param {Object} state
-     */
     _onStateChange(state) {
         this._updateProgress(state.totalProgress);
         this._updateStatus(state.currentTask);
@@ -47,22 +26,12 @@ export class LoadingUI {
         }
     }
 
-    /**
-     * Update progress bar
-     * @private
-     * @param {number} progress - 0-100
-     */
     _updateProgress(progress) {
         if (this.progressFill) {
             this.progressFill.style.width = `${Math.min(100, progress)}%`;
         }
     }
 
-    /**
-     * Update status text
-     * @private
-     * @param {string|null} currentTask
-     */
     _updateStatus(currentTask) {
         if (this.statusText) {
             this.statusText.textContent = currentTask
@@ -71,11 +40,6 @@ export class LoadingUI {
         }
     }
 
-    /**
-     * Update task list UI
-     * @private
-     * @param {Array} tasks
-     */
     _updateTasks(tasks) {
         if (!this.tasksContainer) return;
 
@@ -108,12 +72,6 @@ export class LoadingUI {
         });
     }
 
-    /**
-     * Get CSS class for task status
-     * @private
-     * @param {string} status
-     * @returns {string}
-     */
     _getTaskClass(status) {
         switch (status) {
             case 'loading': return 'active';
@@ -124,12 +82,6 @@ export class LoadingUI {
         }
     }
 
-    /**
-     * Get icon HTML for task status
-     * @private
-     * @param {string} status
-     * @returns {string}
-     */
     _getTaskIcon(status) {
         switch (status) {
             case 'pending': return '○';
@@ -141,11 +93,6 @@ export class LoadingUI {
         }
     }
 
-    /**
-     * Handle loading complete
-     * @private
-     * @param {boolean} hasErrors
-     */
     _onComplete(hasErrors) {
         if (this.statusText) {
             this.statusText.textContent = hasErrors
@@ -153,19 +100,13 @@ export class LoadingUI {
                 : 'Loading complete!';
         }
 
-        // Update progress to 100%
         this._updateProgress(100);
 
-        // Hide loading screen after a short delay
         setTimeout(() => {
             this.hide();
         }, hasErrors ? 1500 : 800);
     }
 
-    /**
-     * Set the data source name
-     * @param {string} sourceName
-     */
     setDataSource(sourceName) {
         if (this.dataSourceName) {
             this.dataSourceName.textContent = sourceName;
@@ -175,18 +116,12 @@ export class LoadingUI {
         }
     }
 
-    /**
-     * Show the loading screen
-     */
     show() {
         if (this.screen) {
             this.screen.classList.remove('hidden');
         }
     }
 
-    /**
-     * Hide the loading screen
-     */
     hide() {
         if (this.screen) {
             this.screen.classList.add('hidden');
@@ -197,9 +132,6 @@ export class LoadingUI {
         }
     }
 
-    /**
-     * Force hide immediately (for error cases)
-     */
     forceHide() {
         if (this.screen) {
             this.screen.style.display = 'none';
@@ -207,5 +139,4 @@ export class LoadingUI {
     }
 }
 
-// Export singleton instance
 export const loadingUI = new LoadingUI();

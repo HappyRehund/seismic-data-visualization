@@ -80,8 +80,8 @@ export class WellTogglePanel {
         this.toggleAllBtn = document.getElementById(toggleAllBtnId);
         this.setAllLogTypeSelect = document.getElementById('setAllLogTypeSelect');
         this.wellLoader = wellLoader;
-        this.checkboxes = new Map();     // Map of well name -> checkbox element
-        this.logSelectors = new Map();   // Map of well name -> select element
+        this.checkboxes = new Map();
+        this.logSelectors = new Map();
         this.allVisible = true;
 
         this._initToggleAllButton();
@@ -211,9 +211,6 @@ export class WellTogglePanel {
         });
     }
 
-    /**
-     * Refresh log selectors after log data is loaded
-     */
     refreshLogSelectors() {
         // Update the "Set All" dropdown with all available log types
         if (this.setAllLogTypeSelect) {
@@ -345,19 +342,12 @@ export class UIManager {
         }
     }
 
-    /**
-     * Refresh well log selectors after log data is loaded
-     */
     refreshWellLogSelectors() {
         if (this.controls.wellPanel) {
             this.controls.wellPanel.refreshLogSelectors();
         }
     }
 
-    /**
-     * Create camera reset button
-     * @param {SceneManager} sceneManager
-     */
     createCameraReset(sceneManager) {
         const resetBtn = document.getElementById('resetCameraBtn');
         if (resetBtn) {

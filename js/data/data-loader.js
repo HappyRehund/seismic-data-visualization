@@ -1,24 +1,5 @@
-/**
- * DataLoaders.js
- * ===============
- * Concrete data loader implementations using Factory pattern.
- * Each loader extends AbstractDataLoader and implements specific loading logic.
- *
- * ARCHITECTURE:
- * - AbstractDataLoader provides template method for loading flow
- * - Concrete loaders implement _fetchData() and _processData()
- * - DataSourceManager handles DB vs CSV fallback automatically
- */
-
 import { AbstractDataLoader, DataLoaderFactory, loadingStateManager } from './data-loader-factory.js';
-import { HorizonManager } from '../components/horizon.js';
-import { FaultLoader } from '../components/fault.js';
-import { WellLoader } from '../components/well.js';
-import { WellLogLoader } from '../components/well-log.js';
-
-// ============================================================
-// HORIZON LOADER
-// ============================================================
+import { HorizonManager, FaultLoader, WellLoader, WellLogLoader } from '../components/index.js'
 
 export class HorizonDataLoader extends AbstractDataLoader {
     constructor(sceneManager, dataSourceManager) {
@@ -34,11 +15,9 @@ export class HorizonDataLoader extends AbstractDataLoader {
         const { csvPath = '/horizon.csv', zColumns = ['top', 'bottom'] } = options;
 
         try {
-            // Try database first
             const data = await this.dataSourceManager.fetch('horizons', {});
             return { source: 'database', data, zColumns };
         } catch (error) {
-            // Fallback to CSV - return path for horizon manager to handle
             return { source: 'csv', csvPath, zColumns };
         }
     }
@@ -53,7 +32,6 @@ export class HorizonDataLoader extends AbstractDataLoader {
             return this.horizonManager;
         }
 
-        // CSV fallback - use existing horizon manager logic
         for (const zColumn of zColumns) {
             try {
                 await this.horizonManager.addHorizon(csvPath, zColumn);
@@ -71,10 +49,6 @@ export class HorizonDataLoader extends AbstractDataLoader {
     }
 }
 
-// ============================================================
-// FAULT LOADER
-// ============================================================
-
 export class FaultDataLoader extends AbstractDataLoader {
     constructor(sceneManager, dataSourceManager) {
         super(sceneManager, dataSourceManager);
@@ -89,11 +63,9 @@ export class FaultDataLoader extends AbstractDataLoader {
         const { faultFiles = [], as3D = true } = options;
 
         try {
-            // Try database first
             const data = await this.dataSourceManager.fetch('faults', {});
             return { source: 'database', data, as3D };
         } catch (error) {
-            // Fallback to CSV
             return { source: 'csv', faultFiles, as3D };
         }
     }
@@ -108,7 +80,6 @@ export class FaultDataLoader extends AbstractDataLoader {
             return this.faultLoader;
         }
 
-        // CSV fallback
         if (faultFiles.length > 0) {
             const totalFiles = faultFiles.length;
             let loadedCount = 0;
@@ -136,10 +107,6 @@ export class FaultDataLoader extends AbstractDataLoader {
         return this.faultLoader;
     }
 }
-
-// ============================================================
-// WELL LOADER
-// ============================================================
 
 export class WellDataLoader extends AbstractDataLoader {
     constructor(sceneManager, dataSourceManager) {
@@ -174,7 +141,6 @@ export class WellDataLoader extends AbstractDataLoader {
             return this.wellLoader;
         }
 
-        // CSV fallback
         await this.wellLoader.load(csvPath);
         return this.wellLoader;
     }
@@ -183,10 +149,6 @@ export class WellDataLoader extends AbstractDataLoader {
         return this.wellLoader;
     }
 }
-
-// ============================================================
-// WELL LOG LOADER
-// ============================================================
 
 export class WellLogDataLoader extends AbstractDataLoader {
     constructor(sceneManager, dataSourceManager) {
@@ -221,7 +183,6 @@ export class WellLogDataLoader extends AbstractDataLoader {
             return this.wellLogLoader;
         }
 
-        // CSV fallback
         await this.wellLogLoader.load(csvPath);
         return this.wellLogLoader;
     }
@@ -231,29 +192,16 @@ export class WellLogDataLoader extends AbstractDataLoader {
     }
 }
 
-// ============================================================
-// SEISMIC DATA LOADER FACTORY (Extended)
-// ============================================================
-
-/**
- * Extended factory with pre-registered loaders
- */
 export class SeismicDataLoaderFactory extends DataLoaderFactory {
     constructor() {
         super();
 
-        // Register all loader types
         this.registerLoader('horizon', HorizonDataLoader);
         this.registerLoader('fault', FaultDataLoader);
         this.registerLoader('well', WellDataLoader);
         this.registerLoader('wellLog', WellLogDataLoader);
     }
 
-    /**
-     * Create all loaders at once
-     * @param {Object} sceneManager
-     * @returns {Object} Map of loader instances
-     */
     createAllLoaders(sceneManager) {
         return {
             horizon: this.createLoader('horizon', sceneManager),
@@ -264,13 +212,6 @@ export class SeismicDataLoaderFactory extends DataLoaderFactory {
     }
 }
 
-// ============================================================
-// DATA LOADING ORCHESTRATOR
-// ============================================================
-
-/**
- * Orchestrates the loading of all data with progress tracking
- */
 export class DataLoadingOrchestrator {
     constructor(sceneManager) {
         this.sceneManager = sceneManager;
@@ -279,18 +220,10 @@ export class DataLoadingOrchestrator {
         this.results = {};
     }
 
-    /**
-     * Initialize all loaders
-     */
     initialize() {
         this.loaders = this.factory.createAllLoaders(this.sceneManager);
     }
 
-    /**
-     * Load all data with progress tracking
-     * @param {Object} config - Loading configuration
-     * @returns {Promise<Object>}
-     */
     async loadAll(config = {}) {
         const {
             horizonConfig = {},
@@ -299,16 +232,11 @@ export class DataLoadingOrchestrator {
             wellLogConfig = {}
         } = config;
 
-        // Register tasks with loading state manager
         loadingStateManager.registerTask('horizon', 'Horizons');
         loadingStateManager.registerTask('well', 'Wells');
         loadingStateManager.registerTask('wellLog', 'Well Logs');
         loadingStateManager.registerTask('fault', 'Faults');
 
-        // Load in sequence for proper dependency handling
-        // (wells need to be loaded before well logs can be attached)
-
-        // 1. Load Horizons
         try {
             loadingStateManager.updateTask('horizon', { status: 'loading', progress: 0 });
             this.results.horizon = await this.loaders.horizon.load(horizonConfig);
@@ -318,7 +246,6 @@ export class DataLoadingOrchestrator {
             loadingStateManager.completeTask('horizon', false, 'Failed');
         }
 
-        // 2. Load Wells
         try {
             loadingStateManager.updateTask('well', { status: 'loading', progress: 0 });
             this.results.well = await this.loaders.well.load(wellConfig);
@@ -328,12 +255,10 @@ export class DataLoadingOrchestrator {
             loadingStateManager.completeTask('well', false, 'Failed');
         }
 
-        // 3. Load Well Logs (depends on wells)
         try {
             loadingStateManager.updateTask('wellLog', { status: 'loading', progress: 0 });
             this.results.wellLog = await this.loaders.wellLog.load(wellLogConfig);
 
-            // Attach log data to wells if both loaded successfully
             if (this.results.well && this.results.wellLog) {
                 const wellLoader = this.loaders.well.getLoader();
                 const wellLogLoader = this.loaders.wellLog.getLoader();
@@ -346,7 +271,6 @@ export class DataLoadingOrchestrator {
             loadingStateManager.skipTask('wellLog', 'No data');
         }
 
-        // 4. Load Faults (can be loaded independently)
         try {
             loadingStateManager.updateTask('fault', { status: 'loading', progress: 0 });
             this.results.fault = await this.loaders.fault.load(faultConfig);
@@ -365,10 +289,6 @@ export class DataLoadingOrchestrator {
         };
     }
 
-    /**
-     * Get factory instance
-     * @returns {SeismicDataLoaderFactory}
-     */
     getFactory() {
         return this.factory;
     }

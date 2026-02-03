@@ -99,18 +99,16 @@ export class Horizon {
         const zRange = ranges.z.max - ranges.z.min;
 
         for (const point of points) {
-            // Normalize to 0-1 range
+
             const normInline = (point.inline - ranges.inline.min) / inlineRange;
             const normCrossline = (point.crossline - ranges.crossline.min) / crosslineRange;
 
-            // Convert to 3D coordinates
             const x = normInline * SeismicConfig.imageWidth;
             const z = normCrossline * SeismicConfig.imageWidth;
             const y = CoordinateSystem.timeToY(point.z);
 
             positions.push(x, y, z);
 
-            // Color based on depth (red = shallow, blue = deep)
             const normalizedZ = (point.z - ranges.z.min) / (zRange / 2);
             color.setHSL(normalizedZ * 0.7, 1.0, 0.5);
             colors.push(color.r, color.g, color.b);
