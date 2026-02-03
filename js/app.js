@@ -19,6 +19,7 @@ class SeismicViewerApp {
         this.uiManager = null;
 
         this.dataOrchestrator = null;
+        this.loadingStateManager = loadingStateManager;
 
         this.sceneFacade = null;
         this.seismicPlanes = null;
@@ -84,37 +85,61 @@ class SeismicViewerApp {
     }
 
     async _loadData() {
-        const faultFiles = FaultFileConfig.getAllFaultFiles();
 
-        const result = await this.dataOrchestrator.loadAll({
-            horizonConfig: {
-                csvPath: '/horizon.csv',
-                zColumns: ['top', 'bottom']
-            },
-            wellConfig: {
-                csvPath: '/well_coordinates.csv'
-            },
-            wellLogConfig: {
-                csvPath: '/GNK_update.csv'
-            },
-            faultConfig: {
-                faultFiles: faultFiles,
-                as3D: true
-            }
+        this.loadingStateManager.registerTask('horizons', 'Loading Horizons');
+        this.loadingStateManager.registerTask('faults', 'Loading Faults');
+        this.loadingStateManager.registerTask('wells', 'Loading Wells');
+
+        // Listen to loading progress
+        this.loadingStateManager.addListener((state) => {
+            console.log(`Loading: ${state.totalProgress.toFixed(0)}% - ${state.currentTask || 'Done'}`);
         });
 
-        this.horizons = new HorizonFacade(this.sceneManager);
-        this.horizons.horizonManager = result.horizonManager;
+        const faultFiles = FaultFileConfig.getAllFaultFiles();
 
-        this.faults = new FaultFacade(this.sceneManager);
-        this.faults.faultLoader = result.faultLoader;
-        this.faults.isLoaded = true;
+        try {
+            this.loadingStateManager.updateTask('horizons', { status: 'loading', progress: 0 });
+            this.loadingStateManager.updateTask('faults', { status: 'loading', progress: 0 });
+            this.loadingStateManager.updateTask('wells', { status: 'loading', progress: 0 });
 
-        this.wells = new WellFacade(this.sceneManager);
-        this.wells.wellLoader = result.wellLoader;
-        this.wells.wellLogLoader = result.wellLogLoader;
+            const result = await this.dataOrchestrator.loadAll({
+                horizonConfig: {
+                    csvPath: '/horizon.csv',
+                    zColumns: ['top', 'bottom']
+                },
+                wellConfig: {
+                    csvPath: '/well_coordinates.csv'
+                },
+                wellLogConfig: {
+                    csvPath: '/GNK_update.csv'
+                },
+                faultConfig: {
+                    faultFiles: faultFiles,
+                    as3D: true
+                }
+            });
 
-        loadingUI.setDataSource(result.dataSource);
+            this.horizons = new HorizonFacade(this.sceneManager);
+            this.horizons.horizonManager = result.horizonManager;
+            this.loadingStateManager.completeTask('horizons', true, 'Horizons loaded');
+
+            this.faults = new FaultFacade(this.sceneManager);
+            this.faults.faultLoader = result.faultLoader;
+            this.faults.isLoaded = true;
+            this.loadingStateManager.completeTask('faults', true, 'Faults loaded');
+
+            this.wells = new WellFacade(this.sceneManager);
+            this.wells.wellLoader = result.wellLoader;
+            this.wells.wellLogLoader = result.wellLogLoader;
+            this.loadingStateManager.completeTask('wells', true, 'Wells loaded');
+
+            loadingUI.setDataSource(result.dataSource);
+        } catch (error) {
+            this.loadingStateManager.completeTask('horizons', false, error.message);
+            this.loadingStateManager.completeTask('faults', false, error.message);
+            this.loadingStateManager.completeTask('wells', false, error.message);
+            throw error;
+        }
     }
 
     async addHorizon(csvPath, zColumn = 'Z') {
@@ -163,15 +188,25 @@ class SeismicViewerApp {
             .getCurrentSourceName() || 'Unknown';
     }
 
-    getSceneFacade() { return this.sceneFacade; }
+    getSceneFacade() {
+        return this.sceneFacade;
+    }
 
-    getSeismicPlanesFacade() { return this.seismicPlanes; }
+    getSeismicPlanesFacade() {
+        return this.seismicPlanes;
+    }
 
-    getFaultFacade() { return this.faults; }
+    getFaultFacade() {
+        return this.faults;
+    }
 
-    getHorizonFacade() { return this.horizons; }
+    getHorizonFacade() {
+        return this.horizons;
+    }
 
-    getWellFacade() { return this.wells; }
+    getWellFacade() {
+        return this.wells;
+    }
 }
 
 const app = new SeismicViewerApp();

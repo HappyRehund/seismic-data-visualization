@@ -17,6 +17,7 @@ export class FaultFacade {
                 console.warn(`Failed to load fault: ${file}`, e);
             }
         }
+
         this.isLoaded = true;
         console.log(`Faults loaded: ${this.faultLoader.faults.length} objects`);
     }
