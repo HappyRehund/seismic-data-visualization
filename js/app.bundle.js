@@ -58,15 +58,14 @@ const StyleConfig = {
 };
 
 const PathConfig = {
-    inlineFolder: '/csv_data/inline_crossline/inline',
-    crosslineFolder: '/csv_data/inline_crossline/crossline',
+    apiBase: 'http://localhost:5000/api',
 
     getInlinePath(index) {
-        return `${this.inlineFolder}/inline_${index + 1}.png`;
+        return `${this.apiBase}/seismic/inline/${index}`;
     },
 
     getCrosslinePath(index) {
-        return `${this.crosslineFolder}/crossline_${index + 1}.png`;
+        return `${this.apiBase}/seismic/crossline/${index}`;
     }
 };
 
@@ -104,166 +103,7 @@ const WellLogConfig = {
     nullOffset: 0
 };
 
-// ============================================================================
-// CONFIG: fault-file.config.js
-// ============================================================================
-const FaultFileConfig = {
-    basePath: 'CSV_fault/',
-
-    faultsByType: {
-        thrustFault: [
-            'F1(IL^Thrust Fault).csv',
-            'F6(IL^Thrust Fault).csv'
-        ],
-
-        normalFault: [
-            'F2(XL^Normal Fault).csv',
-            'F3(XL^Normal Fault).csv',
-            'F4(XL^Normal Fault).csv',
-            'F5(XL^Normal Fault).csv',
-            'F7(XL^Normal Fault).csv',
-            'F15(XL^Normal Fault).csv',
-            'F22(XL^Normal Fault).csv',
-            'F23(XL^Normal Fault).csv',
-            'F26(XL^Normal Fault).csv',
-            'F27(XL^Normal_Fault).csv',
-            'F28(XL^Normal Fault).csv',
-            'F30(XL^Normal Fault).csv',
-            'F31(XL^Normal Fault).csv',
-            'F32(XL^Normal Fault).csv',
-            'F33(XL^Normal Fault).csv',
-            'F35(XL^Normal Fault).csv',
-            'F37(XL^Normal Fault).csv',
-            'F38(XL^Normal Fault).csv',
-            'F39(XL^Normal Fault).csv',
-            'F40(XL^Normal Fault).csv',
-            'F41(XL^Normal Fault).csv',
-            'F44(XL^Normal Fault).csv',
-            'F47 (XL^Normal Fault).csv',
-            'F48(XL^Normal Fault).csv',
-            'F49 (XL^Normal Fault).csv',
-            'F50 (XL^Normal Fault).csv',
-            'F51 (XL^Normal Fault).csv',
-            'F53 (XL^Normal Fault).csv',
-            'F56 (XL^Normal Fault).csv',
-            'F57 (XL^Normal Fault).csv',
-            'F60 (XL^Normal Fault).csv',
-            'F63 (IL^Normal Fault).csv',
-            'F64 (IL^Normal Fault).csv',
-            'F65 (IL^Normal Fault).csv',
-            'F76 (XL^Normal Fault).csv',
-            'F77 (XL^Normal Fault).csv',
-            'F81 (XL^Normal Fault).csv',
-            'F83 (XL^Normal Fault).csv',
-            'F89 (XL^Normal Fault).csv',
-            'F90 (XL^Normal Fault).csv',
-            'F94 (XL^Normal Fault).csv',
-            'F101 (XL^Normal Fault).csv',
-            'F102 (XL^Normal Fault).csv',
-            'F103 (XL^Normal Fault).csv',
-            'F104 (XL^Normal Fault).csv',
-            'F105 (XL^Normal Fault).csv',
-            'F106 (XL^Normal Fault).csv',
-            'F107 (XL^Normal Fault).csv',
-            'F108 (XL^Normal Fault).csv',
-            'F110 (XL^Normal Fault).csv',
-            'F114 (XL^Normal Fault).csv',
-            'F115 (XL^Normal Fault).csv',
-            'F123 (XL^Normal Fault).csv',
-            'F124 (XL^Normal Fault).csv',
-            'F126 (XL^Normal Fault).csv',
-            'F127 (XL^Normal Fault).csv',
-            'F128 (XL^Normal Fault).csv',
-            'F129 (XL^Normal Fault).csv',
-            'F130 (IL^Normal Fault).csv',
-            'F131(IL^Normal Fault).csv',
-            'F132 (IL^Normal Fault).csv'
-        ],
-
-        transpressional: [
-            'F8(XL^Transpressional).csv',
-            'F9(XL^Transpressional).csv',
-            'F10(XL^Transpressional).csv',
-            'F11(XL^Transpressional).csv',
-            'F12(XL^Transpressional).csv',
-            'F13(XL^Normal Transpressional).csv',
-            'F14(XL^Transpressional).csv',
-            'F16(XL^Transpressional).csv',
-            'F17(XL^Transpressional).csv',
-            'F18(XL^Transpressional).csv',
-            'F19(XL^Transpressional).csv',
-            'F20(XL^Transpressional).csv',
-            'F21(XL^Transpressional).csv',
-            'F24(XL^Transpressional).csv',
-            'F25(XL^Transpressional).csv',
-            'F34(XL^Transpressional).csv',
-            'F36(XL^Transpressional).csv',
-            'F42(XL^Transressional).csv',
-            'F43(XL^Transpressional).csv',
-            'F45 (XL^Transpressional).csv',
-            'F46 (XL^Transpressional).csv',
-            'F52 (XL^Transpressional).csv',
-            'F54(XL^Transpressional).csv',
-            'F55 (XL^Transpressional).csv',
-            'F58(XL^Transpressional).csv',
-            'F59 (XL^Transpressional).csv',
-            'F61 (XL^Transpressional).csv',
-            'F66 (XL^Transpressional).csv',
-            'F67 (XL^Transpressional).csv',
-            'F68 (XL^Transpressional).csv',
-            'F69 (XL^Transpressional).csv',
-            'F70 (XL^Transpressional).csv',
-            'F71 (XL^Transpressional).csv',
-            'F72 (XL^Trans[ressional).csv',
-            'F73 (XL^Transpressional).csv',
-            'F74 (XL^Transpressional).csv',
-            'F75 (XL^Transpressional).csv',
-            'F78 (XL^Transpressional).csv',
-            'F79 (XL^Transpressional).csv',
-            'F80 (XL^Trampsressional).csv',
-            'F82 (XL^Tramspressional).csv',
-            'F84 (XL^Transpressional).csv',
-            'F85 (XL^Transpressional).csv',
-            'F86 (XL^Transpressional).csv',
-            'F87 (XL^Transpressional).csv',
-            'F88 (XL^Transpressional).csv',
-            'F91 (XL^Transpressional).csv',
-            'F92 (XL^Transpressional).csv',
-            'F93 (XL^Transpressional).csv',
-            'F95 (XL^Transpressional).csv',
-            'F96 (XL^Transpressional).csv',
-            'F100(XL^Transpressional).csv',
-            'F109 (XL^Transpressional).csv',
-            'F111 (XL^Tranpsressional).csv',
-            'F112 (XL^Transpressional).csv',
-            'F113 (XL^Transpressional).csv',
-            'F116 (XL^Transpressional).csv',
-            'F118 (XL^Transpressional).csv',
-            'F119 (XL^Transpressional).csv',
-            'F120 (XL^Transpressional).csv',
-            'F121 (XL^Transressional).csv',
-            'F122 (XL^Transprssional).csv',
-            'F125 (XL^Transpressional).csv',
-            'F126 (XL^Transpressional).csv'
-        ],
-
-        reverseFault: [
-            'F62 (IL^Reverse Fault).csv'
-        ]
-    },
-
-    getAllFaultFiles() {
-        const allFiles = [];
-
-        Object.values(this.faultsByType).forEach(files => {
-            files.forEach(file => {
-                allFiles.push(this.basePath + file);
-            });
-        });
-
-        return allFiles;
-    }
-};
+// FaultFileConfig removed – fault list now comes from backend API.
 
 // ============================================================================
 // CORE: coordinate-system.js
@@ -698,97 +538,39 @@ class FaultLoader {
         this.faults = [];
     }
 
-    async loadFaultLines(path) {
-        console.log(`Loading fault lines: ${path}`);
+    loadFaultSurfacesFromJSON(faultData) {
+        console.log(`Loading fault surfaces from JSON: ${faultData.filename}`);
 
         try {
-            const response = await fetch(path);
-            const text = await response.text();
-            const faultData = this._parseCSV(text);
+            const sticks = faultData.sticks;
+            const sticksSorted = sticks.sort((a, b) => a.stick_id - b.stick_id);
 
-            Object.values(faultData).forEach(segment => {
-                if (segment.length !== 2) return;
+            for (let i = 0; i < sticksSorted.length - 1; i++) {
+                const s1 = sticksSorted[i];
+                const s2 = sticksSorted[i + 1];
 
-                const fault = new FaultSegment(
-                    this.sceneManager,
-                    segment[0],
-                    segment[1],
-                    segment[0].name
-                );
-                this.faults.push(fault);
-            });
+                if (s1.points.length === 2 && s2.points.length === 2) {
+                    // Check same fault plane
+                    if (s1.points[0].fault_plane !== s2.points[0].fault_plane) continue;
 
-            console.log(`Fault lines loaded: ${path}`);
-        } catch (error) {
-            console.error('Failed to load fault:', error);
-        }
-    }
+                    const p1 = s1.points;
+                    const p2 = s2.points;
 
-    async loadFaultSurfaces(path) {
-        console.log(`Loading fault surfaces: ${path}`);
-
-        try {
-            const response = await fetch(path);
-            const text = await response.text();
-            const faultData = this._parseCSV(text);
-
-            const pairKeys = Object.keys(faultData)
-                .map(k => parseInt(k))
-                .sort((a, b) => a - b);
-
-            for (let i = 0; i < pairKeys.length - 1; i++) {
-                const p1 = faultData[pairKeys[i]];
-                const p2 = faultData[pairKeys[i + 1]];
-
-                if (p1[0].name !== p2[0].name) continue;
-
-                if (p1.length === 2 && p2.length === 2) {
                     const panel = new FaultPanel(
                         this.sceneManager,
-                        p1[0], p1[1],
-                        p2[0], p2[1]
+                        { inline_n: p1[0].inline_n, crossline_n: p1[0].crossline_n, time: p1[0].time, name: p1[0].fault_plane },
+                        { inline_n: p1[1].inline_n, crossline_n: p1[1].crossline_n, time: p1[1].time, name: p1[1].fault_plane },
+                        { inline_n: p2[0].inline_n, crossline_n: p2[0].crossline_n, time: p2[0].time, name: p2[0].fault_plane },
+                        { inline_n: p2[1].inline_n, crossline_n: p2[1].crossline_n, time: p2[1].time, name: p2[1].fault_plane }
                     );
                     this.faults.push(panel);
                 }
             }
 
-            console.log(`Fault surfaces loaded: ${path}`);
+            console.log(`Fault surfaces loaded from JSON: ${faultData.filename}`);
         } catch (error) {
-            console.error('Failed to load fault surface:', error);
+            console.error('Failed to load fault surface from JSON:', error);
         }
-    }
-
-    _parseCSV(text) {
-        const delimiter = ',';
-        const rows = text.trim().split(/\r?\n/);
-        const header = rows[0].split(delimiter);
-
-        const idx = (col) => header.indexOf(col);
-        const faultPairIdx = idx('Fault_Stick');
-        const faultNameIdx = idx('Fault_Plane');
-
-        if (faultPairIdx === -1 || idx('Times') === -1) {
-            throw new Error('Required columns not found: Fault_Stick, Times');
-        }
-
-        const faults = {};
-
-        for (let i = 1; i < rows.length; i++) {
-            const cols = rows[i].split(delimiter);
-            if (cols.length < header.length) continue;
-
-            const pair = parseInt(cols[faultPairIdx]);
-            if (!faults[pair]) faults[pair] = [];
-
-            faults[pair].push({
-                inline_n: parseFloat(cols[idx('inline_n')]),
-                crossline_n: parseFloat(cols[idx('crossline_n')]),
-                time: parseFloat(cols[idx('Times')]),
-                name: cols[faultNameIdx]
-            });
-        }
-
-        return faults;
     }
 
     setAllVisible(visible) {
@@ -815,79 +597,46 @@ class Horizon {
         this.maxZ = -Infinity;
     }
 
-    async load(csvUrl, zColumnName) {
-        console.log(`Loading horizon: ${csvUrl}`);
+    loadFromJSON(horizonData) {
+        console.log(`Loading horizon: ${horizonData.name}`);
 
         try {
-            const response = await fetch(csvUrl);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const text = await response.text();
-            const data = this._parseCSV(text, zColumnName);
-
-            if (data.points.length === 0) {
+            const points = horizonData.points;
+            if (!points || points.length === 0) {
                 console.warn('No valid horizon points found');
                 return;
             }
 
+            this.minZ = horizonData.z_min;
+            this.maxZ = horizonData.z_max;
+
+            // Build ranges from the data
+            let minInline = Infinity, maxInline = -Infinity;
+            let minCrossline = Infinity, maxCrossline = -Infinity;
+
+            for (const point of points) {
+                minInline = Math.min(minInline, point.inline);
+                maxInline = Math.max(maxInline, point.inline);
+                minCrossline = Math.min(minCrossline, point.crossline);
+                maxCrossline = Math.max(maxCrossline, point.crossline);
+            }
+
+            const data = {
+                points,
+                ranges: {
+                    inline: { min: minInline, max: maxInline },
+                    crossline: { min: minCrossline, max: maxCrossline },
+                    z: { min: this.minZ, max: this.maxZ }
+                }
+            };
+
             this._createPointCloud(data);
-            console.log(`Horizon loaded: ${data.points.length} points`);
+            console.log(`Horizon loaded: ${points.length} points`);
 
         } catch (error) {
             console.error('Failed to load horizon:', error);
             throw error;
         }
-    }
-
-    _parseCSV(text, zColumnName) {
-        const lines = text.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
-
-        const inlineIdx = headers.indexOf('Inline');
-        const crosslineIdx = headers.indexOf('Crossline');
-        const zIdx = headers.indexOf(zColumnName);
-
-        if (inlineIdx === -1 || crosslineIdx === -1 || zIdx === -1) {
-            throw new Error(
-                `Required columns not found. Need: Inline, Crossline, ${zColumnName}. ` +
-                `Found: ${headers.join(', ')}`
-            );
-        }
-
-        const points = [];
-        let minInline = Infinity, maxInline = -Infinity;
-        let minCrossline = Infinity, maxCrossline = -Infinity;
-
-        for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',');
-            if (values.length < headers.length) continue;
-
-            const inline = parseFloat(values[inlineIdx]);
-            const crossline = parseFloat(values[crosslineIdx]);
-            const z = parseFloat(values[zIdx]);
-
-            if (isNaN(inline) || isNaN(crossline) || isNaN(z)) continue;
-
-            points.push({ inline, crossline, z });
-
-            minInline = Math.min(minInline, inline);
-            maxInline = Math.max(maxInline, inline);
-            minCrossline = Math.min(minCrossline, crossline);
-            maxCrossline = Math.max(maxCrossline, crossline);
-            this.minZ = Math.min(this.minZ, z);
-            this.maxZ = Math.max(this.maxZ, z);
-        }
-
-        return {
-            points,
-            ranges: {
-                inline: { min: minInline, max: maxInline },
-                crossline: { min: minCrossline, max: maxCrossline },
-                z: { min: this.minZ, max: this.maxZ }
-            }
-        };
     }
 
     _createPointCloud(data) {
@@ -956,9 +705,9 @@ class HorizonManager {
         this.horizons = [];
     }
 
-    async addHorizon(csvUrl, zColumnName) {
+    addHorizonFromJSON(horizonData) {
         const horizon = new Horizon(this.sceneManager);
-        await horizon.load(csvUrl, zColumnName);
+        horizon.loadFromJSON(horizonData);
         this.horizons.push(horizon);
         return horizon;
     }
@@ -1381,73 +1130,43 @@ class WellLogLoader {
         this.availableLogTypes = new Set();
     }
 
-    async load(csvPath) {
-        console.log(`Loading well logs: ${csvPath}`);
+    loadFromJSON(apiData) {
+        console.log('Loading well logs from API...');
 
         try {
-            const response = await fetch(csvPath);
-            const text = await response.text();
+            const { well_logs, available_log_types } = apiData;
 
-            this._parseCSV(text);
+            this.availableLogTypes = new Set(available_log_types || []);
 
-            console.log(`Well logs loaded for ${this.wellLogs.size} wells`);
-            console.log(`Well names in log file: ${[...this.wellLogs.keys()].slice(0, 10).join(', ')}...`);
+            for (const wellLog of well_logs) {
+                const wellName = wellLog.well_name;
+                const wellLogData = new WellLogData(wellName);
+
+                for (const dp of wellLog.data) {
+                    const logValues = {};
+                    for (const logType of (wellLog.available_logs || [])) {
+                        const key = logType.toLowerCase();
+                        logValues[logType] = dp[key] !== null && dp[key] !== undefined ? dp[key] : null;
+                    }
+                    wellLogData.addDataPoint(dp.tvdss, logValues);
+                }
+
+                this.wellLogs.set(wellName, wellLogData);
+
+                // Create normalized name mappings
+                const normalizedNames = this._getNormalizedNames(wellName);
+                for (const normName of normalizedNames) {
+                    if (!this.wellLogs.has(normName)) {
+                        this.wellLogs.set(normName, wellLogData);
+                    }
+                }
+            }
+
+            console.log(`Well logs loaded for ${well_logs.length} wells`);
             console.log(`Available log types: ${[...this.availableLogTypes].join(', ')}`);
 
         } catch (error) {
             console.error('Failed to load well logs:', error);
-        }
-    }
-
-    _parseCSV(text) {
-        const rows = text.split('\n').map(r => r.trim()).filter(r => r.length > 0);
-
-        if (rows.length === 0) return;
-
-        const header = rows[0].split(',').map(h => h.trim());
-
-        const wellIdx = header.indexOf('WELL');
-        const depthIdx = header.indexOf('TVDSS');
-
-        const logColumns = ['GR', 'RT', 'RHOB', 'NPHI', 'DT', 'SP', 'PHIE', 'VSH', 'SWE'];
-        const logIndices = {};
-
-        for (const log of logColumns) {
-            const idx = header.indexOf(log);
-            if (idx !== -1) {
-                logIndices[log] = idx;
-                this.availableLogTypes.add(log);
-            }
-        }
-
-        for (let i = 1; i < rows.length; i++) {
-            const cols = rows[i].split(',');
-
-            let wellName = cols[wellIdx]?.trim();
-            const depth = parseFloat(cols[depthIdx]);
-
-            if (!wellName || isNaN(depth)) continue;
-
-            const normalizedNames = this._getNormalizedNames(wellName);
-
-            if (!this.wellLogs.has(wellName)) {
-                this.wellLogs.set(wellName, new WellLogData(wellName));
-
-                for (const normName of normalizedNames) {
-                    if (!this.wellLogs.has(normName)) {
-                        this.wellLogs.set(normName, this.wellLogs.get(wellName));
-                    }
-                }
-            }
-            const wellLogData = this.wellLogs.get(wellName);
-
-            const logValues = {};
-            for (const [logType, idx] of Object.entries(logIndices)) {
-                const value = parseFloat(cols[idx]);
-                logValues[logType] = isNaN(value) ? null : value;
-            }
-
-            wellLogData.addDataPoint(depth, logValues);
         }
     }
 
@@ -1738,46 +1457,30 @@ class WellLoader {
         this.onWellsLoaded = null;
     }
 
-    async load(path, defaultTimeEnd = 1200) {
-        console.log(`Loading wells: ${path}`);
+    loadFromJSON(apiData, defaultTimeEnd = 1200) {
+        console.log('Loading wells from API...');
 
         try {
-            const response = await fetch(path);
-            const text = await response.text();
-
-            const delimiter = ';';
-            const rows = text.split('\n').map(r => r.trim()).filter(r => r.length > 1);
-            const header = rows[0].split(delimiter);
-
-            const inlineIdx = header.indexOf('Inline_n');
-            const crossIdx = header.indexOf('Crossline_n');
-            const nameIdx = header.indexOf('Well_name');
+            const { wells: wellDataList } = apiData;
 
             const coordinateMap = new Map();
 
-            const wellDataList = [];
-            for (let i = 1; i < rows.length; i++) {
-                const cols = rows[i].split(delimiter);
+            for (const wd of wellDataList) {
+                const inline = wd.inline_n;
+                const crossline = wd.crossline_n;
+                const name = wd.well_name;
 
-                const inline = parseFloat(cols[inlineIdx]);
-                const crossline = parseFloat(cols[crossIdx]);
-                const name = cols[nameIdx]?.trim();
+                if (isNaN(inline) || isNaN(crossline) || !name) continue;
 
-                if (!isNaN(inline) && !isNaN(crossline) && name) {
-                    wellDataList.push({ inline, crossline, name });
-                }
-            }
-
-            for (const wellData of wellDataList) {
-                const coordKey = `${wellData.inline},${wellData.crossline}`;
+                const coordKey = `${inline},${crossline}`;
 
                 if (!coordinateMap.has(coordKey)) {
                     coordinateMap.set(coordKey, {
-                        primary: wellData,
+                        primary: { inline, crossline, name },
                         duplicates: []
                     });
                 } else {
-                    coordinateMap.get(coordKey).duplicates.push(wellData.name);
+                    coordinateMap.get(coordKey).duplicates.push(name);
                 }
             }
 
@@ -1789,7 +1492,6 @@ class WellLoader {
                     continue;
                 }
 
-                let displayName = primary.name;
                 if (duplicates.length > 0) {
                     console.log(`Well ${primary.name} has duplicates at same location: ${duplicates.join(', ')}`);
                 }
@@ -2044,33 +1746,6 @@ class FaultFacade {
         this.isLoaded = false;
     }
 
-    async loadAs3D(faultFiles) {
-        console.log(`Loading ${faultFiles.length} fault files as 3D...`);
-        for (const file of faultFiles) {
-            try {
-                await this.faultLoader.loadFaultSurfaces(file);
-            } catch (e) {
-                console.warn(`Failed to load fault: ${file}`, e);
-            }
-        }
-
-        this.isLoaded = true;
-        console.log(`Faults loaded: ${this.faultLoader.faults.length} objects`);
-    }
-
-    async loadAsLines(faultFiles) {
-        console.log(`Loading ${faultFiles.length} fault files as lines...`);
-        for (const file of faultFiles) {
-            try {
-                await this.faultLoader.loadFaultLines(file);
-            } catch (e) {
-                console.warn(`Failed to load fault: ${file}`, e);
-            }
-        }
-        this.isLoaded = true;
-        console.log(`Faults loaded: ${this.faultLoader.faults.length} objects`);
-    }
-
     show() {
         this.setVisible(true);
     }
@@ -2121,18 +1796,6 @@ class HorizonFacade {
         this.isVisible = true;
     }
 
-    async load(csvPath, zColumn) {
-        return await this.horizonManager.addHorizon(csvPath, zColumn);
-    }
-
-    async loadMultiple(csvPath, zColumns) {
-        const horizons = [];
-        for (const zColumn of zColumns) {
-            horizons.push(await this.load(csvPath, zColumn));
-        }
-        return horizons;
-    }
-
     show() {
         this.setVisible(true);
     }
@@ -2181,24 +1844,6 @@ class WellFacade {
         this.wellLoader = new WellLoader(sceneManager);
         this.wellLogLoader = new WellLogLoader();
         this.isVisible = true;
-    }
-
-    async loadWells(csvPath, defaultTimeEnd = 1200) {
-        await this.wellLoader.load(csvPath, defaultTimeEnd);
-    }
-
-    async loadWellLogs(csvPath) {
-        await this.wellLogLoader.load(csvPath);
-    }
-
-    async loadAll(wellCsvPath, logCsvPath) {
-        await this.loadWells(wellCsvPath);
-        await this.loadWellLogs(logCsvPath);
-        this.attachLogs();
-    }
-
-    attachLogs() {
-        this.wellLoader.attachLogData(this.wellLogLoader);
     }
 
     show() {
@@ -2265,28 +1910,25 @@ class WellFacade {
 }
 
 // ============================================================================
-// DATA: data-loader-factory.js
+// DATA: api-client.js
 // ============================================================================
-class DataSourceStrategy {
-    constructor(config = {}) {
-        this.config = config;
-        this.name = 'BaseStrategy';
+class ApiClient {
+    constructor(baseUrl = 'http://localhost:5000/api') {
+        this.baseUrl = baseUrl;
     }
 
-    async isAvailable() {
-        throw new Error('Subclass must implement isAvailable()');
-    }
+    async fetch(endpoint) {
+        const url = `${this.baseUrl}/${endpoint}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
 
-    async fetch(endpoint, params = {}) {
-        throw new Error('Subclass must implement fetch()');
-    }
-}
+        if (!response.ok) {
+            throw new Error(`API fetch failed: ${response.status} for ${url}`);
+        }
 
-class DatabaseStrategy extends DataSourceStrategy {
-    constructor(config = {}) {
-        super(config);
-        this.name = 'Database';
-        this.baseUrl = config.apiBaseUrl || '/api';
+        return await response.json();
     }
 
     async isAvailable() {
@@ -2297,212 +1939,13 @@ class DatabaseStrategy extends DataSourceStrategy {
             });
             return response.ok;
         } catch (error) {
-            console.log(`Database API not available: ${error.message}`);
+            console.log(`API not available: ${error.message}`);
             return false;
         }
     }
-
-    async fetch(endpoint, params = {}) {
-        const url = new URL(`${this.baseUrl}/${endpoint}`, window.location.origin);
-
-        Object.entries(params).forEach(([key, value]) => {
-            url.searchParams.append(key, value);
-        });
-
-        const response = await fetch(url.toString(), {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Database fetch failed: ${response.status}`);
-        }
-
-        return await response.json();
-    }
 }
 
-class CSVStrategy extends DataSourceStrategy {
-    constructor(config = {}) {
-        super(config);
-        this.name = 'CSV';
-        this.basePath = config.csvBasePath || '';
-    }
-
-    async isAvailable() {
-        return true;
-    }
-
-    async fetch(endpoint, params = {}) {
-        const path = `${this.basePath}${endpoint}`;
-        const response = await fetch(path);
-
-        if (!response.ok) {
-            throw new Error(`CSV fetch failed: ${response.status} for ${path}`);
-        }
-
-        const text = await response.text();
-        return this._parseCSV(text);
-    }
-
-    _parseCSV(text) {
-        const lines = text.trim().split('\n');
-        if (lines.length === 0) return { headers: [], rows: [] };
-
-        const headers = lines[0].split(',').map(h => h.trim());
-        const rows = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',').map(v => v.trim());
-            if (values.length >= headers.length) {
-                const row = {};
-                headers.forEach((header, idx) => {
-                    row[header] = values[idx];
-                });
-                rows.push(row);
-            }
-        }
-
-        return { headers, rows, rawText: text };
-    }
-}
-
-class AbstractDataLoader {
-    constructor(sceneManager, dataSourceManager) {
-        this.sceneManager = sceneManager;
-        this.dataSourceManager = dataSourceManager;
-        this.loadingState = {
-            status: 'idle',
-            progress: 0,
-            message: '',
-            error: null
-        };
-        this.onProgress = null;
-    }
-
-    get typeName() {
-        return 'AbstractLoader';
-    }
-
-    async load(options = {}) {
-        this._updateState('loading', 0, `Loading ${this.typeName}...`);
-
-        try {
-            await this._prepare(options);
-            this._updateState('loading', 10, 'Preparing...');
-
-            const data = await this._fetchData(options);
-            this._updateState('loading', 50, 'Processing data...');
-
-            const result = await this._processData(data, options);
-            this._updateState('loading', 90, 'Finalizing...');
-
-            await this._finalize(result, options);
-            this._updateState('success', 100, `${this.typeName} loaded successfully`);
-
-            return result;
-        } catch (error) {
-            this._updateState('error', 0, `Failed to load ${this.typeName}`, error);
-            throw error;
-        }
-    }
-
-    async _prepare(options) {
-    }
-
-    async _fetchData(options) {
-        throw new Error('Subclass must implement _fetchData()');
-    }
-
-    async _processData(data, options) {
-        throw new Error('Subclass must implement _processData()');
-    }
-
-    async _finalize(result, options) {
-    }
-
-    _updateState(status, progress, message, error = null) {
-        this.loadingState = { status, progress, message, error };
-        if (this.onProgress) {
-            this.onProgress({ ...this.loadingState });
-        }
-    }
-}
-
-class DataSourceManager {
-    constructor() {
-        this.strategies = [];
-        this.currentStrategy = null;
-    }
-
-    registerStrategy(strategy, priority = 100) {
-        this.strategies.push({ strategy, priority });
-        this.strategies.sort((a, b) => a.priority - b.priority);
-    }
-
-    async getAvailableStrategy() {
-        for (const { strategy } of this.strategies) {
-            if (await strategy.isAvailable()) {
-                this.currentStrategy = strategy;
-                console.log(`Using data source: ${strategy.name}`);
-                return strategy;
-            }
-        }
-        throw new Error('No data source available');
-    }
-
-    async fetch(endpoint, params = {}) {
-        for (const { strategy } of this.strategies) {
-            try {
-                if (await strategy.isAvailable()) {
-                    return await strategy.fetch(endpoint, params);
-                }
-            } catch (error) {
-                console.warn(`Strategy ${strategy.name} failed for ${endpoint}:`, error.message);
-            }
-        }
-        throw new Error(`All data sources failed for: ${endpoint}`);
-    }
-
-    getCurrentSourceName() {
-        return this.currentStrategy?.name || 'Unknown';
-    }
-}
-
-class DataLoaderFactory {
-    constructor() {
-        this.dataSourceManager = new DataSourceManager();
-
-        this.dataSourceManager.registerStrategy(
-            new DatabaseStrategy({ apiBaseUrl: '/api' }),
-            1
-        );
-        this.dataSourceManager.registerStrategy(
-            new CSVStrategy({ csvBasePath: '' }),
-            100
-        );
-
-        this.loaderRegistry = new Map();
-    }
-
-    registerLoader(type, LoaderClass) {
-        this.loaderRegistry.set(type, LoaderClass);
-    }
-
-    createLoader(type, sceneManager) {
-        const LoaderClass = this.loaderRegistry.get(type);
-        if (!LoaderClass) {
-            throw new Error(`Unknown loader type: ${type}`);
-        }
-        return new LoaderClass(sceneManager, this.dataSourceManager);
-    }
-
-    getDataSourceManager() {
-        return this.dataSourceManager;
-    }
-}
+const apiClient = new ApiClient();
 
 class LoadingStateManager {
     constructor() {
@@ -2592,267 +2035,80 @@ const loadingStateManager = new LoadingStateManager();
 // ============================================================================
 // DATA: data-loader.js
 // ============================================================================
-class HorizonDataLoader extends AbstractDataLoader {
-    constructor(sceneManager, dataSourceManager) {
-        super(sceneManager, dataSourceManager);
-        this.horizonManager = new HorizonManager(sceneManager);
-    }
-
-    get typeName() {
-        return 'Horizons';
-    }
-
-    async _fetchData(options) {
-        const { csvPath = '/horizon.csv', zColumns = ['top', 'bottom'] } = options;
-
-        try {
-            const data = await this.dataSourceManager.fetch('horizons', {});
-            return { source: 'database', data, zColumns };
-        } catch (error) {
-            return { source: 'csv', csvPath, zColumns };
-        }
-    }
-
-    async _processData(fetchResult, options) {
-        const { source, csvPath, zColumns, data } = fetchResult;
-
-        if (source === 'database') {
-            console.log('Processing horizon data from database');
-            return this.horizonManager;
-        }
-
-        for (const zColumn of zColumns) {
-            try {
-                await this.horizonManager.addHorizon(csvPath, zColumn);
-                this._updateState('loading', 50 + (zColumns.indexOf(zColumn) * 20), `Loaded horizon: ${zColumn}`);
-            } catch (error) {
-                console.warn(`Failed to load horizon column ${zColumn}:`, error);
-            }
-        }
-
-        return this.horizonManager;
-    }
-
-    getManager() {
-        return this.horizonManager;
-    }
-}
-
-class FaultDataLoader extends AbstractDataLoader {
-    constructor(sceneManager, dataSourceManager) {
-        super(sceneManager, dataSourceManager);
-        this.faultLoader = new FaultLoader(sceneManager);
-    }
-
-    get typeName() {
-        return 'Faults';
-    }
-
-    async _fetchData(options) {
-        const { faultFiles = [], as3D = true } = options;
-
-        try {
-            const data = await this.dataSourceManager.fetch('faults', {});
-            return { source: 'database', data, as3D };
-        } catch (error) {
-            return { source: 'csv', faultFiles, as3D };
-        }
-    }
-
-    async _processData(fetchResult, options) {
-        const { source, faultFiles, as3D, data } = fetchResult;
-
-        if (source === 'database') {
-            console.log('Processing fault data from database');
-            return this.faultLoader;
-        }
-
-        if (faultFiles.length > 0) {
-            const totalFiles = faultFiles.length;
-            let loadedCount = 0;
-
-            for (const file of faultFiles) {
-                try {
-                    if (as3D) {
-                        await this.faultLoader.loadFaultSurfaces(file);
-                    } else {
-                        await this.faultLoader.loadFaultLines(file);
-                    }
-                    loadedCount++;
-                    const progress = 20 + (loadedCount / totalFiles * 70);
-                    this._updateState('loading', progress, `Loaded fault ${loadedCount}/${totalFiles}`);
-                } catch (error) {
-                    console.warn(`Failed to load fault: ${file}`, error);
-                }
-            }
-        }
-
-        return this.faultLoader;
-    }
-
-    getLoader() {
-        return this.faultLoader;
-    }
-}
-
-class WellDataLoader extends AbstractDataLoader {
-    constructor(sceneManager, dataSourceManager) {
-        super(sceneManager, dataSourceManager);
-        this.wellLoader = new WellLoader(sceneManager);
-    }
-
-    get typeName() {
-        return 'Wells';
-    }
-
-    async _fetchData(options) {
-        const { csvPath = '/well_coordinates.csv' } = options;
-
-        try {
-            const data = await this.dataSourceManager.fetch('wells', {});
-            return { source: 'database', data };
-        } catch (error) {
-            return { source: 'csv', csvPath };
-        }
-    }
-
-    async _processData(fetchResult, options) {
-        const { source, csvPath, data } = fetchResult;
-
-        if (source === 'database') {
-            console.log('Processing well data from database');
-            return this.wellLoader;
-        }
-
-        await this.wellLoader.load(csvPath);
-        return this.wellLoader;
-    }
-
-    getLoader() {
-        return this.wellLoader;
-    }
-}
-
-class WellLogDataLoader extends AbstractDataLoader {
-    constructor(sceneManager, dataSourceManager) {
-        super(sceneManager, dataSourceManager);
-        this.wellLogLoader = new WellLogLoader();
-    }
-
-    get typeName() {
-        return 'Well Logs';
-    }
-
-    async _fetchData(options) {
-        const { csvPath = '/GNK_update.csv' } = options;
-
-        try {
-            const data = await this.dataSourceManager.fetch('well-logs', {});
-            return { source: 'database', data };
-        } catch (error) {
-            return { source: 'csv', csvPath };
-        }
-    }
-
-    async _processData(fetchResult, options) {
-        const { source, csvPath, data } = fetchResult;
-
-        if (source === 'database') {
-            console.log('Processing well log data from database');
-            return this.wellLogLoader;
-        }
-
-        await this.wellLogLoader.load(csvPath);
-        return this.wellLogLoader;
-    }
-
-    getLoader() {
-        return this.wellLogLoader;
-    }
-}
-
-class SeismicDataLoaderFactory extends DataLoaderFactory {
-    constructor() {
-        super();
-
-        this.registerLoader('horizon', HorizonDataLoader);
-        this.registerLoader('fault', FaultDataLoader);
-        this.registerLoader('well', WellDataLoader);
-        this.registerLoader('wellLog', WellLogDataLoader);
-    }
-
-    createAllLoaders(sceneManager) {
-        return {
-            horizon: this.createLoader('horizon', sceneManager),
-            fault: this.createLoader('fault', sceneManager),
-            well: this.createLoader('well', sceneManager),
-            wellLog: this.createLoader('wellLog', sceneManager)
-        };
-    }
-}
-
 class DataLoadingOrchestrator {
     constructor(sceneManager) {
         this.sceneManager = sceneManager;
-        this.factory = new SeismicDataLoaderFactory();
-        this.loaders = {};
-        this.results = {};
+        this.horizonManager = null;
+        this.faultLoader = null;
+        this.wellLoader = null;
+        this.wellLogLoader = null;
     }
 
-    initialize() {
-        this.loaders = this.factory.createAllLoaders(this.sceneManager);
-    }
-
-    async loadAll(config = {}) {
-        const {
-            horizonConfig = {},
-            faultConfig = {},
-            wellConfig = {},
-            wellLogConfig = {}
-        } = config;
-
+    async loadAll() {
         loadingStateManager.registerTask('horizon', 'Horizons');
         loadingStateManager.registerTask('well', 'Wells');
         loadingStateManager.registerTask('wellLog', 'Well Logs');
         loadingStateManager.registerTask('fault', 'Faults');
 
+        // ── Horizons ──
+        this.horizonManager = new HorizonManager(this.sceneManager);
         try {
             loadingStateManager.updateTask('horizon', { status: 'loading', progress: 0 });
-            this.results.horizon = await this.loaders.horizon.load(horizonConfig);
+            const horizonData = await apiClient.fetch('horizons?z_columns=top,bottom');
+            for (const h of horizonData.horizons) {
+                this.horizonManager.addHorizonFromJSON(h);
+            }
             loadingStateManager.completeTask('horizon', true, 'Loaded');
         } catch (error) {
             console.warn('Horizon loading failed:', error);
             loadingStateManager.completeTask('horizon', false, 'Failed');
         }
 
+        // ── Wells ──
+        this.wellLoader = new WellLoader(this.sceneManager);
         try {
             loadingStateManager.updateTask('well', { status: 'loading', progress: 0 });
-            this.results.well = await this.loaders.well.load(wellConfig);
+            const wellData = await apiClient.fetch('wells');
+            this.wellLoader.loadFromJSON(wellData);
             loadingStateManager.completeTask('well', true, 'Loaded');
         } catch (error) {
             console.warn('Well loading failed:', error);
             loadingStateManager.completeTask('well', false, 'Failed');
         }
 
+        // ── Well Logs ──
+        this.wellLogLoader = new WellLogLoader();
         try {
             loadingStateManager.updateTask('wellLog', { status: 'loading', progress: 0 });
-            this.results.wellLog = await this.loaders.wellLog.load(wellLogConfig);
+            const wellLogData = await apiClient.fetch('well-logs');
+            this.wellLogLoader.loadFromJSON(wellLogData);
 
-            if (this.results.well && this.results.wellLog) {
-                const wellLoader = this.loaders.well.getLoader();
-                const wellLogLoader = this.loaders.wellLog.getLoader();
-                wellLoader.attachLogData(wellLogLoader);
+            if (this.wellLoader && this.wellLogLoader) {
+                this.wellLoader.attachLogData(this.wellLogLoader);
             }
-
             loadingStateManager.completeTask('wellLog', true, 'Loaded');
         } catch (error) {
             console.warn('Well log loading failed:', error);
             loadingStateManager.skipTask('wellLog', 'No data');
         }
 
+        // ── Faults ──
+        this.faultLoader = new FaultLoader(this.sceneManager);
         try {
             loadingStateManager.updateTask('fault', { status: 'loading', progress: 0 });
-            this.results.fault = await this.loaders.fault.load(faultConfig);
+            const faultData = await apiClient.fetch('faults');
+            const totalFaults = faultData.faults.length;
+            let loadedCount = 0;
+
+            for (const fault of faultData.faults) {
+                this.faultLoader.loadFaultSurfacesFromJSON(fault);
+                loadedCount++;
+                loadingStateManager.updateTask('fault', {
+                    status: 'loading',
+                    progress: Math.round((loadedCount / totalFaults) * 100),
+                    message: `Loaded ${loadedCount}/${totalFaults}`
+                });
+            }
             loadingStateManager.completeTask('fault', true, 'Loaded');
         } catch (error) {
             console.warn('Fault loading failed:', error);
@@ -2860,16 +2116,12 @@ class DataLoadingOrchestrator {
         }
 
         return {
-            horizonManager: this.loaders.horizon.getManager(),
-            faultLoader: this.loaders.fault.getLoader(),
-            wellLoader: this.loaders.well.getLoader(),
-            wellLogLoader: this.loaders.wellLog.getLoader(),
-            dataSource: this.factory.getDataSourceManager().getCurrentSourceName()
+            horizonManager: this.horizonManager,
+            faultLoader: this.faultLoader,
+            wellLoader: this.wellLoader,
+            wellLogLoader: this.wellLogLoader,
+            dataSource: 'API'
         };
-    }
-
-    getFactory() {
-        return this.factory;
     }
 }
 
@@ -3390,8 +2642,6 @@ class SeismicViewerApp {
 
             this._initSeismicPlanes();
 
-            this._initDataOrchestrator();
-
             await this._loadData();
 
             this._initUI();
@@ -3415,11 +2665,6 @@ class SeismicViewerApp {
         this.seismicPlanes = new SeismicPlaneFacade(this.sceneManager);
     }
 
-    _initDataOrchestrator() {
-        this.dataOrchestrator = new DataLoadingOrchestrator(this.sceneManager);
-        this.dataOrchestrator.initialize();
-    }
-
     _initUI() {
         this.uiManager = new UIManager();
 
@@ -3440,75 +2685,30 @@ class SeismicViewerApp {
 
     async _loadData() {
 
-        this.loadingStateManager.registerTask('horizons', 'Loading Horizons');
-        this.loadingStateManager.registerTask('faults', 'Loading Faults');
-        this.loadingStateManager.registerTask('wells', 'Loading Wells');
-
         this.loadingStateManager.addListener((state) => {
             console.log(`Loading: ${state.totalProgress.toFixed(0)}% - ${state.currentTask || 'Done'}`);
         });
 
-        const faultFiles = FaultFileConfig.getAllFaultFiles();
+        this.dataOrchestrator = new DataLoadingOrchestrator(this.sceneManager);
 
         try {
-            this.loadingStateManager.updateTask('horizons', { status: 'loading', progress: 0 });
-            this.loadingStateManager.updateTask('faults', { status: 'loading', progress: 0 });
-            this.loadingStateManager.updateTask('wells', { status: 'loading', progress: 0 });
-
-            const result = await this.dataOrchestrator.loadAll({
-                horizonConfig: {
-                    csvPath: '/csv_data/horizon/horizon.csv',
-                    zColumns: ['top', 'bottom']
-                },
-                wellConfig: {
-                    csvPath: '/csv_data/well/well_coordinates.csv'
-                },
-                wellLogConfig: {
-                    csvPath: '/csv_data/well_log/gnk_well_log.csv'
-                },
-                faultConfig: {
-                    faultFiles: faultFiles,
-                    as3D: true
-                }
-            });
+            const result = await this.dataOrchestrator.loadAll();
 
             this.horizons = new HorizonFacade(this.sceneManager);
             this.horizons.horizonManager = result.horizonManager;
-            this.loadingStateManager.completeTask('horizons', true, 'Horizons loaded');
 
             this.faults = new FaultFacade(this.sceneManager);
             this.faults.faultLoader = result.faultLoader;
             this.faults.isLoaded = true;
-            this.loadingStateManager.completeTask('faults', true, 'Faults loaded');
 
             this.wells = new WellFacade(this.sceneManager);
             this.wells.wellLoader = result.wellLoader;
             this.wells.wellLogLoader = result.wellLogLoader;
-            this.loadingStateManager.completeTask('wells', true, 'Wells loaded');
 
             loadingUI.setDataSource(result.dataSource);
         } catch (error) {
-            this.loadingStateManager.completeTask('horizons', false, error.message);
-            this.loadingStateManager.completeTask('faults', false, error.message);
-            this.loadingStateManager.completeTask('wells', false, error.message);
             throw error;
         }
-    }
-
-    async addHorizon(csvPath, zColumn = 'Z') {
-        return await this.horizons.load(csvPath, zColumn);
-    }
-
-    async addFaultLines(csvPath) {
-        await this.faults.addFaultLines(csvPath);
-    }
-
-    async addFaultSurfaces(csvPath) {
-        await this.faults.addFaultSurface(csvPath);
-    }
-
-    async addWells(csvPath) {
-        await this.wells.loadWells(csvPath);
     }
 
     setInlineIndex(index) {
@@ -3536,9 +2736,7 @@ class SeismicViewerApp {
     }
 
     getDataSource() {
-        return this.dataOrchestrator?.getFactory()
-            .getDataSourceManager()
-            .getCurrentSourceName() || 'Unknown';
+        return 'API';
     }
 
     getSceneFacade() {
