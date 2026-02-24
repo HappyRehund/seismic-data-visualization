@@ -58,14 +58,14 @@ const StyleConfig = {
 };
 
 const PathConfig = {
-    apiBase: 'http://localhost:5000/api',
+    apiBase: (typeof ENV !== 'undefined' && ENV.API_BASE_URL) || 'http://127.0.0.1:5000/api',
 
     getInlinePath(index) {
-        return `${this.apiBase}/seismic/inline/${index}`;
+        return `${this.apiBase}/inline/${index + 1}/image`;
     },
 
     getCrosslinePath(index) {
-        return `${this.apiBase}/seismic/crossline/${index}`;
+        return `${this.apiBase}/crossline/${index + 1}/image`;
     }
 };
 
@@ -146,9 +146,6 @@ class CoordinateSystem {
     }
 }
 
-// ============================================================================
-// CORE: scene-manager.js
-// ============================================================================
 class SceneManager {
     constructor() {
         this.scene = null;
@@ -1744,22 +1741,27 @@ class FaultFacade {
         this.faultLoader = new FaultLoader(sceneManager);
         this.isVisible = true;
         this.isLoaded = false;
+        this.isDisabled = false;
     }
 
     show() {
+        if (this.isDisabled) return;
         this.setVisible(true);
     }
 
     hide() {
+        if (this.isDisabled) return;
         this.setVisible(false);
     }
 
     toggle() {
+        if (this.isDisabled) return this.isVisible;
         this.setVisible(!this.isVisible);
         return this.isVisible;
     }
 
     setVisible(visible) {
+        if (this.isDisabled) return;
         this.faultLoader.setAllVisible(visible);
         this.isVisible = visible;
     }
@@ -1913,12 +1915,13 @@ class WellFacade {
 // DATA: api-client.js
 // ============================================================================
 class ApiClient {
-    constructor(baseUrl = 'http://localhost:5000/api') {
-        this.baseUrl = baseUrl;
+    constructor(baseUrl = null) {
+        this.baseUrl = baseUrl || PathConfig.apiBase;
     }
 
     async fetch(endpoint) {
         const url = `${this.baseUrl}/${endpoint}`;
+        console.log(`[API] Fetching: ${url}`);
         const response = await fetch(url, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
@@ -1928,12 +1931,22 @@ class ApiClient {
             throw new Error(`API fetch failed: ${response.status} for ${url}`);
         }
 
-        return await response.json();
+        const json = await response.json();
+
+        // Unwrap the backend envelope { success, data }
+        if (json.success === false) {
+            throw new Error(json.error || `API error for ${url}`);
+        }
+
+        // Return the data payload directly
+        return json.data !== undefined ? json.data : json;
     }
 
     async isAvailable() {
         try {
-            const response = await fetch(`${this.baseUrl}/health`, {
+            // Health check is at root, not under /api
+            const baseRoot = this.baseUrl.replace(/\/api\/?$/, '');
+            const response = await fetch(`${baseRoot}/health`, {
                 method: 'GET',
                 signal: AbortSignal.timeout(3000)
             });
@@ -2042,6 +2055,7 @@ class DataLoadingOrchestrator {
         this.faultLoader = null;
         this.wellLoader = null;
         this.wellLogLoader = null;
+        this.faultFailed = false;
     }
 
     async loadAll() {
@@ -2050,53 +2064,94 @@ class DataLoadingOrchestrator {
         loadingStateManager.registerTask('wellLog', 'Well Logs');
         loadingStateManager.registerTask('fault', 'Faults');
 
-        // ── Horizons ──
+        // ── Horizons ── GET /api/horizon (full data, no pagination)
         this.horizonManager = new HorizonManager(this.sceneManager);
         try {
             loadingStateManager.updateTask('horizon', { status: 'loading', progress: 0 });
-            const horizonData = await apiClient.fetch('horizons?z_columns=top,bottom');
-            for (const h of horizonData.horizons) {
+            const horizonData = await apiClient.fetch('horizon');
+            const transformedHorizons = this._transformHorizonData(horizonData.horizons);
+            for (const h of transformedHorizons) {
                 this.horizonManager.addHorizonFromJSON(h);
             }
-            loadingStateManager.completeTask('horizon', true, 'Loaded');
+            loadingStateManager.completeTask('horizon', true, `Loaded ${horizonData.count} points`);
         } catch (error) {
             console.warn('Horizon loading failed:', error);
             loadingStateManager.completeTask('horizon', false, 'Failed');
         }
 
-        // ── Wells ──
+        // ── Wells ── GET /api/well (full data)
         this.wellLoader = new WellLoader(this.sceneManager);
         try {
             loadingStateManager.updateTask('well', { status: 'loading', progress: 0 });
-            const wellData = await apiClient.fetch('wells');
+            const wellData = await apiClient.fetch('well');
             this.wellLoader.loadFromJSON(wellData);
-            loadingStateManager.completeTask('well', true, 'Loaded');
+            loadingStateManager.completeTask('well', true, `Loaded ${wellData.count} wells`);
         } catch (error) {
             console.warn('Well loading failed:', error);
             loadingStateManager.completeTask('well', false, 'Failed');
         }
 
-        // ── Well Logs ──
+        // ── Well Logs ── GET /api/well-log/<well_name> per well (full data, no pagination)
         this.wellLogLoader = new WellLogLoader();
         try {
             loadingStateManager.updateTask('wellLog', { status: 'loading', progress: 0 });
-            const wellLogData = await apiClient.fetch('well-logs');
-            this.wellLogLoader.loadFromJSON(wellLogData);
 
-            if (this.wellLoader && this.wellLogLoader) {
-                this.wellLoader.attachLogData(this.wellLogLoader);
+            const wellNames = this.wellLoader ? this.wellLoader.getWellNames() : [];
+            if (wellNames.length === 0) {
+                throw new Error('No wells loaded, cannot fetch well logs');
             }
-            loadingStateManager.completeTask('wellLog', true, 'Loaded');
+
+            // Fetch well logs per-well in parallel (avoid fetching 900K+ rows at once)
+            const allWellLogEntries = [];
+            let successCount = 0;
+            const BATCH_SIZE = 5; // Load 5 wells at a time to avoid overwhelming the server
+
+            for (let i = 0; i < wellNames.length; i += BATCH_SIZE) {
+                const batch = wellNames.slice(i, i + BATCH_SIZE);
+                const results = await Promise.allSettled(
+                    batch.map(name => apiClient.fetch(`well-log/${encodeURIComponent(name)}`))
+                );
+
+                for (let j = 0; j < results.length; j++) {
+                    if (results[j].status === 'fulfilled') {
+                        const data = results[j].value;
+                        if (data.well_logs && data.well_logs.length > 0) {
+                            allWellLogEntries.push(...data.well_logs);
+                            successCount++;
+                        }
+                    } else {
+                        console.warn(`Well log for ${batch[j]} failed:`, results[j].reason);
+                    }
+                }
+
+                loadingStateManager.updateTask('wellLog', {
+                    status: 'loading',
+                    progress: Math.round((Math.min(i + BATCH_SIZE, wellNames.length) / wellNames.length) * 100),
+                    message: `${successCount}/${wellNames.length} wells`
+                });
+            }
+
+            if (allWellLogEntries.length > 0) {
+                const transformedWellLogs = this._transformWellLogData(allWellLogEntries);
+                this.wellLogLoader.loadFromJSON(transformedWellLogs);
+
+                if (this.wellLoader && this.wellLogLoader) {
+                    this.wellLoader.attachLogData(this.wellLogLoader);
+                }
+            }
+
+            loadingStateManager.completeTask('wellLog', true, `Loaded ${successCount}/${wellNames.length} wells`);
         } catch (error) {
             console.warn('Well log loading failed:', error);
             loadingStateManager.skipTask('wellLog', 'No data');
         }
 
-        // ── Faults ──
+        // ── Faults ── No endpoint yet, handle gracefully
         this.faultLoader = new FaultLoader(this.sceneManager);
+        this.faultFailed = false;
         try {
             loadingStateManager.updateTask('fault', { status: 'loading', progress: 0 });
-            const faultData = await apiClient.fetch('faults');
+            const faultData = await apiClient.fetch('fault');
             const totalFaults = faultData.faults.length;
             let loadedCount = 0;
 
@@ -2109,10 +2164,11 @@ class DataLoadingOrchestrator {
                     message: `Loaded ${loadedCount}/${totalFaults}`
                 });
             }
-            loadingStateManager.completeTask('fault', true, 'Loaded');
+            loadingStateManager.completeTask('fault', true, `Loaded ${totalFaults} faults`);
         } catch (error) {
-            console.warn('Fault loading failed:', error);
-            loadingStateManager.completeTask('fault', false, 'Failed');
+            console.warn('Fault loading failed (endpoint not available):', error);
+            this.faultFailed = true;
+            loadingStateManager.skipTask('fault', 'Endpoint not available');
         }
 
         return {
@@ -2120,7 +2176,95 @@ class DataLoadingOrchestrator {
             faultLoader: this.faultLoader,
             wellLoader: this.wellLoader,
             wellLogLoader: this.wellLogLoader,
+            faultFailed: this.faultFailed,
             dataSource: 'API'
+        };
+    }
+
+    /**
+     * Transform flat horizon data from API into grouped horizon objects.
+     * Backend returns: [{ Inline, Crossline, top, bottom, ... }]
+     * Frontend expects: [{ name, points: [{inline, crossline, z}], z_min, z_max }]
+     */
+    _transformHorizonData(rawHorizons) {
+        const topPoints = [];
+        const bottomPoints = [];
+        let topMin = Infinity, topMax = -Infinity;
+        let bottomMin = Infinity, bottomMax = -Infinity;
+
+        for (const h of rawHorizons) {
+            if (h.top !== null && h.top !== undefined && h.top !== 0) {
+                topPoints.push({ inline: h.Inline, crossline: h.Crossline, z: h.top });
+                if (h.top < topMin) topMin = h.top;
+                if (h.top > topMax) topMax = h.top;
+            }
+            if (h.bottom !== null && h.bottom !== undefined && h.bottom !== 0) {
+                bottomPoints.push({ inline: h.Inline, crossline: h.Crossline, z: h.bottom });
+                if (h.bottom < bottomMin) bottomMin = h.bottom;
+                if (h.bottom > bottomMax) bottomMax = h.bottom;
+            }
+        }
+
+        const horizons = [];
+        if (topPoints.length > 0) {
+            horizons.push({ name: 'Top', points: topPoints, z_min: topMin, z_max: topMax });
+        }
+        if (bottomPoints.length > 0) {
+            horizons.push({ name: 'Bottom', points: bottomPoints, z_min: bottomMin, z_max: bottomMax });
+        }
+
+        console.log(`Horizons transformed: ${topPoints.length} top points, ${bottomPoints.length} bottom points`);
+        return horizons;
+    }
+
+    /**
+     * Transform flat well log entries from API into grouped format.
+     * Backend returns: [{ well, tvdss, gr, rt, rhob, ... }]  (flat rows)
+     * Frontend expects: { well_logs: [{ well_name, available_logs, data }], available_log_types }
+     */
+    _transformWellLogData(rawWellLogs) {
+        const LOG_KEYS = ['gr', 'rt', 'rhob', 'nphi', 'dt', 'dts', 'sp', 'phie', 'phit', 'vsh', 'swe'];
+        const grouped = new Map();
+
+        for (const entry of rawWellLogs) {
+            const wellName = entry.well;
+            if (!wellName) continue;
+            if (!grouped.has(wellName)) {
+                grouped.set(wellName, []);
+            }
+            grouped.get(wellName).push(entry);
+        }
+
+        const allLogTypes = new Set();
+        const wellLogs = [];
+
+        for (const [wellName, entries] of grouped) {
+            const availableLogs = [];
+            for (const key of LOG_KEYS) {
+                if (entries.some(e => e[key] !== null && e[key] !== undefined && e[key] !== 0 && e[key] !== -999.25)) {
+                    const upperKey = key.toUpperCase();
+                    availableLogs.push(upperKey);
+                    allLogTypes.add(upperKey);
+                }
+            }
+
+            wellLogs.push({
+                well_name: wellName,
+                available_logs: availableLogs,
+                data: entries.map(e => {
+                    const dp = { tvdss: e.tvdss };
+                    for (const key of LOG_KEYS) {
+                        dp[key] = e[key];
+                    }
+                    return dp;
+                })
+            });
+        }
+
+        console.log(`Well logs transformed: ${wellLogs.length} wells, log types: ${[...allLogTypes].join(', ')}`);
+        return {
+            well_logs: wellLogs,
+            available_log_types: [...allLogTypes]
         };
     }
 }
@@ -2155,7 +2299,8 @@ class SliderControl {
 
     _updateLabel(value) {
         if (this.label) {
-            this.label.textContent = value.toString();
+            // Display the actual section number (1-based) to match the image file
+            this.label.textContent = (value + 1).toString();
         }
     }
 
@@ -2435,6 +2580,16 @@ class UIManager {
         );
     }
 
+    disableFaultToggle() {
+        const btn = document.getElementById('toggleFaultBtn');
+        if (btn) {
+            btn.textContent = 'Fault N/A';
+            btn.disabled = true;
+            btn.classList.add('btn-disabled');
+            btn.title = 'Fault data not available — endpoint belum tersedia';
+        }
+    }
+
     createWellPanel(wellLoader) {
         this.controls.wellPanel = new WellTogglePanel(
             'wellList',
@@ -2674,7 +2829,11 @@ class SeismicViewerApp {
 
         this.uiManager.createHorizonToggle(this.horizons.getManager());
 
-        this.uiManager.createFaultToggle(this.faults.getLoader());
+        if (this.faults && !this.faults.isDisabled) {
+            this.uiManager.createFaultToggle(this.faults.getLoader());
+        } else {
+            this.uiManager.disableFaultToggle();
+        }
 
         this.uiManager.createWellPanel(this.wells.getWellLoader());
 
@@ -2699,7 +2858,8 @@ class SeismicViewerApp {
 
             this.faults = new FaultFacade(this.sceneManager);
             this.faults.faultLoader = result.faultLoader;
-            this.faults.isLoaded = true;
+            this.faults.isLoaded = !result.faultFailed;
+            this.faults.isDisabled = result.faultFailed;
 
             this.wells = new WellFacade(this.sceneManager);
             this.wells.wellLoader = result.wellLoader;

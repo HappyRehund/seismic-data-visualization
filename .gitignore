@@ -1,3 +1,5 @@
 /csv_data/*
 
 .vscode
+
+.env

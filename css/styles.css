@@ -280,6 +280,20 @@ body {
   font-size: 12px;
 }
 
+.btn-disabled,
+.btn:disabled {
+  background: #999;
+  color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-disabled:hover,
+.btn:disabled:hover {
+  background: #999;
+  transform: none;
+}
+
 .btn-group {
   display: flex;
   gap: 8px;
